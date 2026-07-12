@@ -277,8 +277,8 @@ ROSWrapper::ROSWrapper(const rclcpp::NodeOptions& options)
   LOG(INFO) << GREEN << " ---> Using Lidar type: "
             << lidarTypeToString(g_lidar_type) << RESET;
 
-  msg2uav_.header.frame_id = "world";
-  path_.header.frame_id = "world";
+  msg2uav_.header.frame_id = "camera_init";
+  path_.header.frame_id = "camera_init";
 
   setupIO();
 }
@@ -324,7 +324,7 @@ void ROSWrapper::setupIO(){
 
   /// output ======================================
   pub_odom_ = this->create_publisher<nav_msgs::msg::Odometry>(
-      "/lio/odom", 100);
+      "/Odometry", 100);
 
   pub_imu_odom_ = this->create_publisher<nav_msgs::msg::Odometry>(
       "/lio/imu/odom", 10);
@@ -408,8 +408,8 @@ void ROSWrapper::imuHandler(const sensor_msgs::msg::Imu::SharedPtr msg){
 
     odom_imu.header.stamp = msg->header.stamp;
     odom_robo.header.stamp = msg->header.stamp;
-    odom_imu.header.frame_id = "world";
-    odom_robo.header.frame_id = "world";
+    odom_imu.header.frame_id = "camera_init";
+    odom_robo.header.frame_id = "camera_init";
     pub_imu_odom_->publish(odom_imu);
     pub_robo_odom_->publish(odom_robo);
   }
@@ -567,7 +567,8 @@ bool ROSWrapper::sync_measure(MeasureGroup& meas){
 
 void ROSWrapper::pub_odom(const NavState& state){
   nav_msgs::msg::Odometry odom;
-  odom.header.frame_id = "world";
+  odom.header.frame_id = "camera_init";
+  odom.child_frame_id = "body";
 
   odom.header.stamp = toRosTime(state.timestamp);
   odom.pose.pose.position.x = state.p[0];
@@ -617,7 +618,7 @@ void ROSWrapper::pub_odom(const NavState& state){
   geometry_msgs::msg::TransformStamped tf_msg;
 
   tf_msg.header.stamp = odom.header.stamp;
-  tf_msg.header.frame_id = "world";
+  tf_msg.header.frame_id = "camera_init";
   tf_msg.child_frame_id = "imu";
 
   tf_msg.transform.translation.x = state.p[0];
@@ -644,7 +645,7 @@ void ROSWrapper::pub_odom(const NavState& state){
 void ROSWrapper::pub_cloud_world(const CloudPtr& pc, double time){
   sensor_msgs::msg::PointCloud2 cloud;
   pcl::toROSMsg(*pc, cloud);
-  cloud.header.frame_id = "world";
+  cloud.header.frame_id = "camera_init";
   cloud.header.stamp = toRosTime(time);
   pub_cloud_world_->publish(cloud);
 }
@@ -656,7 +657,7 @@ void ROSWrapper::pub_cloud2planner(const CloudPtr& pc, double time){
         "/lio/robo/cloud_world", 10);
   sensor_msgs::msg::PointCloud2 cloud;
   pcl::toROSMsg(*pc, cloud);
-  cloud.header.frame_id = "world";
+  cloud.header.frame_id = "camera_init";
   cloud.header.stamp = toRosTime(time);
   pub_cloud2robot_->publish(cloud);
 }
@@ -722,7 +723,7 @@ void ROSWrapper::pub_processing_time(double time,
 
 void ROSWrapper::set_global_map(const BASIC::CloudPtr& global_map){
   pcl::toROSMsg(*global_map, global_map_msg_);
-  global_map_msg_.header.frame_id = "world";
+  global_map_msg_.header.frame_id = "camera_init";
 
   static auto global_map_pub =
     this->create_publisher<sensor_msgs::msg::PointCloud2>(
