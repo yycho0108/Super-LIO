@@ -1,0 +1,145 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Global Options:
+    Background Color: 20; 20; 25
+    Fixed Frame: world
+    Frame Rate: 30
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Ground grid
+      Enabled: true
+      Cell Size: 1
+      Plane: XY
+      Plane Cell Count: 40
+      Color: 100; 100; 105
+      Alpha: 0.5
+    - Class: rviz_default_plugins/PointCloud2
+      Name: dump6 prebuilt map
+      Enabled: true
+      Topic:
+        Value: /localization/prebuilt_map
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Depth: 1
+      Color Transformer: FlatColor
+      Color: 180; 180; 190
+      Position Transformer: XYZ
+      Style: Points
+      Size (Pixels): 2
+      Alpha: 0.75
+      Decay Time: 0
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Super-LIO current cloud
+      Enabled: true
+      Topic:
+        Value: /lio/cloud_world
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 5
+      Color Transformer: FlatColor
+      Color: 40; 255; 80
+      Position Transformer: XYZ
+      Style: Points
+      Size (Pixels): 3
+      Alpha: 1
+      Decay Time: 0.5
+    - Class: rviz_default_plugins/Path
+      Name: Super-LIO trajectory
+      Enabled: true
+      Topic:
+        Value: /lio/path
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 10
+      Color: 20; 255; 20
+      Line Style: Lines
+      Line Width: 0.04
+      Buffer Length: 1
+    - Class: rviz_default_plugins/Path
+      Name: GLIM reference trajectory
+      Enabled: true
+      Topic:
+        Value: /reference/glim_path
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 10
+      Color: 255; 40; 255
+      Line Style: Lines
+      Line Width: 0.03
+      Buffer Length: 1
+    - Class: rviz_default_plugins/Odometry
+      Name: Super-LIO current pose
+      Enabled: true
+      Topic:
+        Value: /lio/odom
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 10
+      Keep: 1
+      Position Tolerance: 0.01
+      Angle Tolerance: 0.01
+      Shape:
+        Value: Arrow
+        Color: 20; 255; 20
+        Alpha: 1
+        Shaft Length: 0.7
+        Shaft Radius: 0.05
+        Head Length: 0.2
+        Head Radius: 0.12
+    - Class: rviz_default_plugins/Odometry
+      Name: GLIM reference current pose
+      Enabled: true
+      Topic:
+        Value: /reference/glim_odom_world
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 10
+      Keep: 1
+      Position Tolerance: 0.01
+      Angle Tolerance: 0.01
+      Shape:
+        Value: Arrow
+        Color: 255; 40; 255
+        Alpha: 1
+        Shaft Length: 0.7
+        Shaft Radius: 0.05
+        Head Length: 0.2
+        Head Radius: 0.12
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Estimate/reference pose markers
+      Enabled: true
+      Marker Topic:
+        Value: /localization/pose_markers
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 10
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 25
+      Pitch: 0.65
+      Yaw: 0.8
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+Window Geometry:
+  Width: 1500
+  Height: 900
