@@ -2,13 +2,15 @@
 
 conda deactivate 2>/dev/null || true
 source /opt/ros/humble/setup.bash
-source /home/dongjae/Super-LIO/install/setup.bash
+# source /home/dongjae/Super-LIO/install/setup.bash
 set -euo pipefail
 
-WORKSPACE=/home/dongjae/Super-LIO
-CONFIG=$WORKSPACE/src/super_lio/config/relocation_real_20260725.yaml
-MAP=$WORKSPACE/src/super_lio/map_real_20260725/dump6.pcd
-RVIZ_CONFIG=$WORKSPACE/src/super_lio/rviz/relocation_real_20260722.rviz
+#WORKSPACE=/home/dongjae/Super-LIO
+#WORKSPACE=~/ws/src/Super-LIO/
+WORKSPACE=~/ws
+CONFIG=$WORKSPACE/src/Super-LIO/src/super_lio/config/relocation_real_20260725.yaml
+MAP=$WORKSPACE/src/Super-LIO/src/super_lio/map_real_20260725/dump6.pcd
+RVIZ_CONFIG=$WORKSPACE/src/Super-LIO/src/super_lio/rviz/relocation_real_20260725.rviz
 WITH_RVIZ=false
 INIT_POSE='[-0.10,0.10,0.0,0.0,0.0,-127.0]'
 

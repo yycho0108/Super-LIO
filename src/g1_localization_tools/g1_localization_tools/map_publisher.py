@@ -46,6 +46,7 @@ class MapPublisher(Node):
         map_path = self.get_parameter('map_path').value
         if not map_path:
             raise RuntimeError('map_path parameter is required')
+        print(F'got map_path = {map_path}')
         self._point_count, payload = load_xyzi_pcd(map_path)
         qos = QoSProfile(
             history=HistoryPolicy.KEEP_LAST,
