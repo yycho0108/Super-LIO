@@ -21,7 +21,7 @@
     lio.sensor.imu_na: 0.1
     lio.sensor.imu_ng: 0.1
     lio.sensor.imu_nba: 0.0001
-    lio.sensor.nbg: 0.0001
+    lio.sensor.imu_nbg: 0.0001
 
     lio.extrinsic.lidar_imu: [-0.011, -0.02329, 0.04412, 
                               1.0, 0.0, 0.0, 
@@ -50,7 +50,7 @@
     lio.output.dense: true
     lio.output.pub_step: 1
 
-    lio.relocation.update_map: true
+    lio.relocation.update_map: false
     lio.relocation.init_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     lio.eva.timer: true
