@@ -1,0 +1,71 @@
+/**:
+  ros__parameters:
+    # ROOT is compiled as src/super_lio/, so this resolves to the separate
+    # coordinate-preserving XYZI copy of dump6.pcd.
+    lio.map.save_map: false
+    lio.map.if_filter: true
+    lio.map.save_map_dir: "map_real_20260725"
+    lio.map.map_name: "dump6.pcd"
+    lio.map.ds_size: 0.25
+    lio.map.save_interval: -1
+
+    # Verified from metadata.yaml, DB messages, and dump6/config/config_ros.json.
+    lio.ros.lidar_topic: "/livox/lidar"
+    lio.ros.imu_topic: "/livox/imu"
+
+    # /livox/lidar is livox_ros_driver2/msg/CustomMsg (MID-360).
+    lio.sensor.lidar_type: 1
+    lio.sensor.blind: 0.6
+    lio.sensor.maxrange: 100.0
+    lio.sensor.filter_rate: 1
+    lio.sensor.enable_downsample: true
+    lio.sensor.voxel_fliter_size: 0.20
+    lio.sensor.gravity_norm: 9.81
+    lio.sensor.imu_type: 1
+    # Values recorded in dump6/config/config_sensors.json.
+    lio.sensor.imu_na: 0.05
+    lio.sensor.imu_ng: 0.02
+    lio.sensor.imu_nba: 0.00001
+    lio.sensor.imu_nbg: 0.00001
+
+    # dump6 records T_lidar_imu (IMU pose in LiDAR coordinates) as
+    # [0.011, 0.02329, -0.04412] with identity rotation. The bag's TF
+    # imu->lidar is the inverse translation below. Super-LIO applies this
+    # matrix to LiDAR points to obtain IMU-frame points.
+    lio.extrinsic.lidar_imu: [-0.011, -0.02329, 0.04412,
+                              1.0, 0.0, 0.0,
+                              0.0, -1.0, 0.0,
+                              0.0, 0.0, -1.0]
+
+    # Explicit policy-frame choice: /lio/robo/odom is the Livox IMU pose.
+    # G1 balance state remains the responsibility of the G1 estimator.
+    lio.extrinsic.odom_robo: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    # dump6 has 13,467 points.
+    lio.hash_map.hash_capacity: 500000
+    lio.hash_map.vox_resolution: 0.25
+
+    lio.kf.kf_type: 0
+    lio.kf.kf_max_iterations: 4
+    lio.kf.kf_align_gravity: true
+    lio.kf.kf_quit_eps: 0.001
+
+    lio.submap.submap_resolution: 0.5
+    lio.submap.submap_capacity: 200000
+
+    lio.output.robot: false
+    lio.output.plan_env_world: false
+    lio.output.plan_env_body: false
+    lio.output.ml_map: false
+    lio.output.planner: false
+    lio.output.map: true
+    lio.output.dense: true
+    lio.output.pub_step: 1
+
+    lio.relocation.update_map: false
+    # No independently surveyed Super-LIO initial pose accompanies this bag.
+    # This is a neutral placeholder, not a value copied from
+    # /glim_ros/odom_corrected. Pass the measured seed through --init-pose.
+    lio.relocation.init_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    lio.eva.timer: true
