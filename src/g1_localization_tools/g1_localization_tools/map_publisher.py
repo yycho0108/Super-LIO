@@ -97,3 +97,6 @@ def main(args=None):
                 rclpy.shutdown()
         except (KeyboardInterrupt, RuntimeError):
             pass
+
+if __name__ == '__main__':
+    main()

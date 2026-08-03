@@ -2,20 +2,24 @@
 
 # Source ROS before nounset: Humble's generated setup files reference optional
 # shell variables that are not guaranteed to be defined.
-conda deactivate 2>/dev/null || true
-source /opt/ros/humble/setup.bash
-source /home/dongjae/Super-LIO/install/setup.bash
-set -euo pipefail
+#conda deactivate 2>/dev/null || true
+#source /opt/ros/humble/setup.bash
+#source /home/dongjae/Super-LIO/install/setup.bash
+#set -euo pipefail
 
-WORKSPACE=/home/dongjae/Super-LIO
+CONFIG=$WORKSPACE/src/super_lio/config/relocation_real_20260725.yaml
+
+MAP_DIR=$WORKSPACE/src/super_lio/map_real_20260725
+MAP=/gate/dump6_xyzi_flip.pcd
+SOURCE_MAP=/gate/dump6_flip.pcd
+
 BAG_DIR=$WORKSPACE/src/super_lio/rosbag2_2026_07_25-14_09_35
 BAG_DB=$BAG_DIR/rosbag2_2026_07_25-14_09_35_0.db3
-CONFIG=$WORKSPACE/src/super_lio/config/relocation_real_20260725.yaml
-SOURCE_MAP=$BAG_DIR/dump6/dump6.pcd
-MAP_DIR=$WORKSPACE/src/super_lio/map_real_20260725
-MAP=$MAP_DIR/dump6_xyzi.pcd
+
+WORKSPACE=~/ws/src/Super-LIO
 PCD_TOOL=$WORKSPACE/install/g1_localization_tools/lib/g1_localization_tools/pcd_xyzi_tool
 RVIZ_CONFIG=$WORKSPACE/src/super_lio/rviz/relocation_real_20260725.rviz
+
 START_OFFSET=0
 DURATION=60
 PLAYBACK_RATE=1.0

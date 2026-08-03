@@ -5,7 +5,7 @@
     lio.map.save_map: false
     lio.map.if_filter: true
     lio.map.save_map_dir: "map_real_20260725"
-    lio.map.map_name: "dump6.pcd"
+    lio.map.map_name: "dump7_xyzi.pcd"
     lio.map.ds_size: 0.25
     lio.map.save_interval: -1
 
@@ -34,8 +34,8 @@
     # matrix to LiDAR points to obtain IMU-frame points.
     lio.extrinsic.lidar_imu: [-0.011, -0.02329, 0.04412,
                               1.0, 0.0, 0.0,
-                              0.0, -1.0, 0.0,
-                              0.0, 0.0, -1.0]
+                              0.0, 1.0, 0.0,
+                              0.0, 0.0, 1.0]
 
     # Explicit policy-frame choice: /lio/robo/odom is the Livox IMU pose.
     # G1 balance state remains the responsibility of the G1 estimator.
@@ -47,7 +47,7 @@
 
     lio.kf.kf_type: 0
     lio.kf.kf_max_iterations: 4
-    lio.kf.kf_align_gravity: true
+    lio.kf.kf_align_gravity: false
     lio.kf.kf_quit_eps: 0.001
 
     lio.submap.submap_resolution: 0.5

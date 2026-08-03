@@ -130,7 +130,7 @@ bool SuperLIOReLoc::map_init(){
 
 
 bool SuperLIOReLoc::kf_init(){
-  const int need_init_frames = 30;
+  const int need_init_frames = 90;
   static int imu_cout = 0;
   static int init_frame_count = 0;
   static V3 mean_gyro = V3::Zero();
@@ -180,7 +180,7 @@ bool SuperLIOReLoc::kf_init(){
   LOG(INFO) << YELLOW << " ---> INIT start... obs_data size: " << init_obs_data_->size() << " target size: " << point_map_->size() << RESET;
 
   V3 gravity = - mean_acce * g_gravity_norm / mean_acce.norm();
-  V3 ref_gravity(0, 0, - g_gravity_norm);
+  V3 ref_gravity(0, 0, -g_gravity_norm);
   M3 init_rot = Quat::FromTwoVectors(gravity, ref_gravity).toRotationMatrix();
   V3 n = init_rot.col(0);
   double yaw = atan2(n(1), n(0));
@@ -188,7 +188,7 @@ bool SuperLIOReLoc::kf_init(){
   M3 R_yaw_inv = Eigen::AngleAxis<scalar>(-yaw, V3::UnitZ()).toRotationMatrix(); 
   M3 rot = R_yaw_inv * init_rot;
 
-  M3 init_guess_R_ = re_init_pose_.R_; // * rot;
+  M3 init_guess_R_ = re_init_pose_.R_ * rot;
   V3 init_guess_t_ = re_init_pose_.t_;
   M4 init_guess_T = M4::Identity();
   init_guess_T.block<3, 3>(0, 0) = init_guess_R_;

@@ -19,9 +19,12 @@ def generate_launch_description():
 
     # CMakeLists.txt is intentionally untouched, so the new map directory is
     # referenced from the workspace source tree rather than added to install().
-    source_map = os.path.join(
-        '/home/dongjae/Super-LIO/src/super_lio',
-        'map_real_20260725', 'dump6.pcd')
+    if False:
+        source_map = os.path.join(
+            '/home/dongjae/Super-LIO/src/super_lio',
+            'map_real_20260725', 'dump6.pcd'
+        )
+    source_map='/home/user/ws/src/Super-LIO/src/super_lio/map_real_20260725/dump6.pcd'
 
     rviz = LaunchConfiguration('rviz')
     policy_bridge = LaunchConfiguration('policy_bridge')

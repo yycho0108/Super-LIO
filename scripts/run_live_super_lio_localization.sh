@@ -9,7 +9,7 @@ set -euo pipefail
 #WORKSPACE=~/ws/src/Super-LIO/
 WORKSPACE=~/ws
 CONFIG=$WORKSPACE/src/Super-LIO/src/super_lio/config/relocation_real_20260725.yaml
-MAP=$WORKSPACE/src/Super-LIO/src/super_lio/map_real_20260725/dump6.pcd
+MAP=$WORKSPACE/src/Super-LIO/src/super_lio/map_real_20260725/dump6_xyzi.pcd
 RVIZ_CONFIG=$WORKSPACE/src/Super-LIO/src/super_lio/rviz/relocation_real_20260725.rviz
 WITH_RVIZ=false
 INIT_POSE='[-0.10,0.10,0.0,0.0,0.0,-127.0]'
@@ -63,12 +63,13 @@ stop_live() {
 }
 trap stop_live EXIT INT TERM
 
-stdbuf -oL -eL "$WORKSPACE/install/super_lio/lib/super_lio/relocation_node" \
+stdbuf -oL -eL ros2 run super_lio relocation_node \
+	--prefix 'gdb -ex run --args' \
   --ros-args --params-file "$CONFIG" -p "lio.relocation.init_pose:=$INIT_POSE" \
   >"$LOG_DIR/super_lio.log" 2>&1 & PIDS+=("$!")
-stdbuf -oL -eL "$WORKSPACE/install/g1_localization_tools/lib/g1_localization_tools/policy_odom_bridge" \
+stdbuf -oL -eL ros2 run g1_localization_tools policy_odom_bridge \
   >"$LOG_DIR/policy_bridge.log" 2>&1 & PIDS+=("$!")
-stdbuf -oL -eL "$WORKSPACE/install/g1_localization_tools/lib/g1_localization_tools/map_publisher" \
+stdbuf -oL -eL ros2 run g1_localization_tools map_publisher \
   --ros-args -p "map_path:=$MAP" -p frame_id:=world \
   >"$LOG_DIR/map_publisher.log" 2>&1 & PIDS+=("$!")
 if [[ "$WITH_RVIZ" == true ]]; then
@@ -80,4 +81,5 @@ command printf '%s\n' \
   'Policy output: /localization/policy_odom_50hz' \
   'Safety diagnostics: /localization/status' \
   'Press Ctrl-C to stop all processes started by this script.'
+
 wait "${PIDS[0]}"
