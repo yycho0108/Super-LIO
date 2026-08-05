@@ -668,6 +668,14 @@ class DualReplayApp:
         self.common_start = float(max(item.times[0] for item in trajectories))
         self.common_end = float(min(item.times[-1] for item in trajectories))
         self.max_elapsed = float(self.common_end - self.common_start)
+        lio_frame_mask = (
+            (self.lio.times >= self.common_start)
+            & (self.lio.times <= self.common_end)
+        )
+        self.frame_sensor_times = np.unique(self.lio.times[lio_frame_mask])
+        if len(self.frame_sensor_times) == 0:
+            raise RuntimeError("No /lio/odom frames exist in the common interval")
+        self.frame_elapsed = self.frame_sensor_times - self.common_start
         (
             self.error_elapsed,
             self.position_errors,
@@ -765,24 +773,27 @@ class DualReplayApp:
             )
 
         self._build_gui()
+        self._bridge_sources = [self._keyboard_bridge_source]
         if not args.no_plots:
-            self._bridge_source = self._find_bridge_source()
-            # Viser's public client callback waits for the first camera packet.
-            # Plot-heavy pages can postpone that packet, so append the bridge to
-            # the websocket stream directly after the persistent UI snapshot.
-            @self.server._websock_server.on_client_connect
-            async def _(_connection) -> None:
-                from viser import _messages as viser_messages
+            self._bridge_sources.append(self._find_bridge_source())
 
-                async def _send_after_hydration() -> None:
-                    await asyncio.sleep(5.0)
+        # Viser's public client callback waits for the first camera packet.
+        # Re-send browser controls after UI hydration so keyboard stepping works
+        # reliably even on plot-heavy pages and with --no-plots.
+        @self.server._websock_server.on_client_connect
+        async def _(_connection) -> None:
+            from viser import _messages as viser_messages
+
+            async def _send_after_hydration() -> None:
+                await asyncio.sleep(5.0)
+                for source in self._bridge_sources:
                     _connection.queue_message(
                         viser_messages.RunJavascriptMessage(
-                            source=self._bridge_source
+                            source=source
                         )
                     )
 
-                asyncio.create_task(_send_after_hydration())
+            asyncio.create_task(_send_after_hydration())
         camera_points = map_points if len(map_points) else np.vstack(
             [item.positions for item in trajectories]
         )
@@ -1062,7 +1073,24 @@ class DualReplayApp:
                 ),
             )
             self.play_button = gui.add_button(
-                "Play / Pause", icon="player-play"
+                "Play / Pause  [Space]", icon="player-play"
+            )
+            self.previous_frame_button = gui.add_button(
+                "Previous /lio/odom frame  [←]"
+            )
+            self.next_frame_button = gui.add_button(
+                "Next /lio/odom frame  [→]"
+            )
+            self.current_frame_number = gui.add_number(
+                "current /lio/odom frame",
+                1,
+                step=1,
+                disabled=True,
+            )
+            self.frame_count_text = gui.add_text(
+                "frame stepping",
+                f"1 / {len(self.frame_sensor_times):,} · Space: play/pause",
+                disabled=True,
             )
             self.speed_control = gui.add_button_group(
                 "speed", options=("0.25×", "0.5×", "1×", "2×")
@@ -1257,9 +1285,15 @@ class DualReplayApp:
 
         @self.play_button.on_click
         def _(_) -> None:
-            with self.lock:
-                self.playing = not self.playing
-                self.last_wall_time = time.monotonic()
+            self._toggle_playback()
+
+        @self.previous_frame_button.on_click
+        def _(_) -> None:
+            self._step_frame(-1)
+
+        @self.next_frame_button.on_click
+        def _(_) -> None:
+            self._step_frame(1)
 
         @self.show_map.on_update
         def _(_) -> None:
@@ -1305,6 +1339,69 @@ class DualReplayApp:
             self._rebuild_joint_plot(float(self.time_slider.value))
             self.update_state(float(self.time_slider.value), force_plots=True)
 
+        self._install_keyboard_bridge()
+
+    def _install_keyboard_bridge(self) -> None:
+        """Map Space/arrow keys to the synchronized Viser playback controls."""
+        from viser import _messages as viser_messages
+
+        play_button_uuid = self.play_button._impl.uuid
+        previous_button_uuid = self.previous_frame_button._impl.uuid
+        next_button_uuid = self.next_frame_button._impl.uuid
+        script = f"""
+(() => {{
+  if (window.__g1ReplayKeyboardHandler) {{
+    window.removeEventListener('keydown', window.__g1ReplayKeyboardHandler);
+  }}
+  const playButtonId = {play_button_uuid!r};
+  const previousButtonId = {previous_button_uuid!r};
+  const nextButtonId = {next_button_uuid!r};
+
+  function clickGuiButton(elementId) {{
+    const root = document.getElementById(elementId);
+    if (!root) return false;
+    const button = root.matches && root.matches('button')
+      ? root
+      : (root.querySelector && root.querySelector('button')) ||
+        (root.parentElement && root.parentElement.querySelector('button'));
+    const target = button || root;
+    target.dispatchEvent(new MouseEvent('click', {{
+      bubbles: true,
+      cancelable: true,
+      view: window,
+    }}));
+    return true;
+  }}
+
+  function handler(event) {{
+    const target = event.target;
+    if (target && target.closest &&
+        target.closest('input, textarea, select, [contenteditable="true"]')) {{
+      return;
+    }}
+    let handled = false;
+    if (event.code === 'Space') {{
+      handled = clickGuiButton(playButtonId);
+    }} else if (event.code === 'ArrowLeft') {{
+      handled = clickGuiButton(previousButtonId);
+    }} else if (event.code === 'ArrowRight') {{
+      handled = clickGuiButton(nextButtonId);
+    }}
+    if (handled) {{
+      event.preventDefault();
+      event.stopPropagation();
+    }}
+  }}
+
+  window.__g1ReplayKeyboardHandler = handler;
+  window.addEventListener('keydown', handler);
+}})();
+"""
+        self._keyboard_bridge_source = script
+        self.server.gui._websock_interface.queue_message(
+            viser_messages.RunJavascriptMessage(source=script)
+        )
+
     def _rebuild_joint_plot(self, elapsed: float) -> None:
         if self.joint_plot_handle is None:
             return
@@ -1317,6 +1414,50 @@ class DualReplayApp:
             self.clock_topic,
         )
         self.joint_plot_handle.figure = self.joint_figure
+
+    def _nearest_frame_index(self, elapsed: float) -> int:
+        right = int(np.searchsorted(self.frame_elapsed, elapsed, side="left"))
+        if right <= 0:
+            return 0
+        if right >= len(self.frame_elapsed):
+            return len(self.frame_elapsed) - 1
+        left = right - 1
+        return (
+            left
+            if elapsed - self.frame_elapsed[left]
+            <= self.frame_elapsed[right] - elapsed
+            else right
+        )
+
+    def _toggle_playback(self) -> None:
+        with self.lock:
+            self.playing = not self.playing
+            self.last_wall_time = time.monotonic()
+
+    def _step_frame(self, direction: int) -> None:
+        """Pause and move to the previous/next exact /lio/odom timestamp."""
+        with self.lock:
+            current = float(self.time_slider.value)
+            epsilon = 1.0e-7
+            if direction < 0:
+                index = int(
+                    np.searchsorted(
+                        self.frame_elapsed, current - epsilon, side="left"
+                    )
+                    - 1
+                )
+            else:
+                index = int(
+                    np.searchsorted(
+                        self.frame_elapsed, current + epsilon, side="right"
+                    )
+                )
+            index = int(np.clip(index, 0, len(self.frame_elapsed) - 1))
+            elapsed = float(self.frame_elapsed[index])
+            self.playing = False
+            self.last_wall_time = time.monotonic()
+            self.time_slider.value = elapsed
+            self.update_state(elapsed, force_plots=True)
 
     def _register_client_camera(
         self, points: np.ndarray, scene_origin: np.ndarray
@@ -1333,12 +1474,11 @@ class DualReplayApp:
         def _(client) -> None:
             # Also send through the per-client socket once the camera handshake is
             # complete. This is intentionally not a broadcast/persistent message.
-            if not self.args.no_plots:
-                from viser import _messages as viser_messages
-
+            from viser import _messages as viser_messages
+            for source in self._bridge_sources:
                 client._websock_connection.queue_message(
                     viser_messages.RunJavascriptMessage(
-                        source=self._bridge_source
+                        source=source
                     )
                 )
             client.camera.up_direction = (0.0, 0.0, 1.0)
@@ -1388,6 +1528,20 @@ class DualReplayApp:
             self.elapsed_number.value = round(elapsed, 4)
             self.sensor_timestamp.value = sensor_timestamp
             self.record_timestamp.value = record_timestamp
+            frame_index = self._nearest_frame_index(elapsed)
+            frame_delta_ms = float(
+                (self.frame_elapsed[frame_index] - elapsed) * 1.0e3
+            )
+            self.current_frame_number.value = frame_index + 1
+            exact_label = (
+                "exact timestamp"
+                if abs(frame_delta_ms) < 1.0e-4
+                else f"nearest Δ={frame_delta_ms:+.3f} ms"
+            )
+            self.frame_count_text.value = (
+                f"{frame_index + 1:,} / {len(self.frame_sensor_times):,} · "
+                f"{exact_label} · Space: play/pause"
+            )
 
             q, dq, tau, imu_rpy, _, _ = self.bag.sample_lowstate(
                 record_timestamp

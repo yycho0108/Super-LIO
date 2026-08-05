@@ -130,6 +130,14 @@ T_MAP_IMU(t) = T_MAP_GLIM · T_GLIM_IMU(traj_imu.txt, t)
 - 실제 29-DoF G1 URDF와 `/lowstate`를 사용한 robot FK
 - 모든 point cloud 기본 크기 `0.01`; UI slider 변경값은 timestamp 이동 후에도 유지
 - grid/scene origin은 초기 GLIM robot 발밑, 초기 camera target은 그 위 robot 중심
+- `Space`: play/pause toggle
+- `←` / `→`: 재생을 멈추고 정확한 이전/다음 `/lio/odom.header.stamp` frame으로 이동
+- Playback 폴더의 `Previous frame` / `Next frame` 버튼으로도 동일한 frame stepping
+
+키보드 단축키는 3D 화면이나 빈 영역에 focus가 있을 때 동작합니다. 숫자 입력창을
+편집 중일 때는 입력을 방해하지 않도록 단축키를 무시합니다. `current /lio/odom
+frame`과 `frame stepping` 항목에서 현재 frame 번호와 exact timestamp 여부를 확인할
+수 있습니다.
 
 ## Robot pose의 frame 체인
 
