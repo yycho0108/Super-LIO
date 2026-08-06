@@ -2,11 +2,12 @@ from pathlib import Path
 import struct
 
 import rclpy
+import numpy as np
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import PointCloud2, PointField
-from sensor_msgs_py.point_cloud2 as pc2
+import sensor_msgs_py.point_cloud2 as pc2
 from std_msgs.msg import Header
 import open3d as o3d
 
@@ -21,7 +22,7 @@ class MapPublisher(Node):
         if not map_path:
             raise RuntimeError('map_path parameter is required')
         print(F'got map_path = {map_path}')
-        if not Path(map_path).exists()
+        if not Path(map_path).exists():
             raise RuntimeError(F'map_path={map_path} does not exist')
 
         # Configure publisher
@@ -55,7 +56,7 @@ class MapPublisher(Node):
             )
             points = np.concatenate([
                 points,
-                pcd.point['intensity']
+                pcd.point['intensity'].numpy()
             ], axis=-1)
 
         # Construct message
@@ -63,7 +64,7 @@ class MapPublisher(Node):
         self._message = pc2.create_cloud(
             header,
             fields,
-            points
+            points.astype(np.float32)
         )
 
         # Periodically publish (and also, publish immediately)

@@ -149,6 +149,8 @@ bool SuperLIO::kf_init(){
   options.quit_eps_ = g_kf_quit_eps;
 
   float imu_scale = g_gravity_norm / mean_acce.norm();
+  // std::cout<<"IMU SCALE: "<<imu_scale<<std::endl;
+
   kf_->SetInitialConditions(options, mean_gyro, V3::Zero(), imu_scale, ref_gravity);
   auto state = kf_->GetSysState();
   state.R = SO3(rot);

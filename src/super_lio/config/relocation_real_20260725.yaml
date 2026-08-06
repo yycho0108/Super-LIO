@@ -24,6 +24,9 @@
     lio.sensor.imu_type: 1
     # Values recorded in dump6/config/config_sensors.json.
     lio.sensor.imu_na: 0.05
+    #lio.sensor.imu_ng: 0.02
+    #lio.sensor.imu_na: 0.25
+    #lio.sensor.imu_na: 1.0
     lio.sensor.imu_ng: 0.02
     lio.sensor.imu_nba: 0.00001
     lio.sensor.imu_nbg: 0.00001
@@ -46,6 +49,7 @@
     lio.hash_map.vox_resolution: 0.25
 
     lio.kf.kf_type: 0
+    #lio.kf.kf_max_iterations: 16
     lio.kf.kf_max_iterations: 4
     lio.kf.kf_align_gravity: false
     lio.kf.kf_quit_eps: 0.001

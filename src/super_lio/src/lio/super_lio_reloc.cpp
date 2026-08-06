@@ -246,7 +246,9 @@ bool SuperLIOReLoc::kf_init(){
   options.num_iterations_ = g_kf_max_iterations;
   options.quit_eps_ = g_kf_quit_eps;
 
-  float imu_scale = g_gravity_norm / mean_acce.norm();
+  // float imu_scale = g_gravity_norm / mean_acce.norm();
+  // std::cout<<"IMU SCALE: "<<imu_scale<<std::endl;
+  const float imu_scale = 1.0;
   kf_->SetInitialConditions(options, mean_gyro, V3::Zero(), imu_scale, ref_gravity);
   auto state = kf_->GetSysState();
   /// The horizontal initial state of the imu in the robot coordinate system.
