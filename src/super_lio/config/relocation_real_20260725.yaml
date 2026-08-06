@@ -46,7 +46,8 @@
 
     # dump6 has 13,467 points.
     lio.hash_map.hash_capacity: 500000
-    lio.hash_map.vox_resolution: 0.25
+    #lio.hash_map.vox_resolution: 0.25
+    lio.hash_map.vox_resolution: 0.10
 
     lio.kf.kf_type: 0
     #lio.kf.kf_max_iterations: 16

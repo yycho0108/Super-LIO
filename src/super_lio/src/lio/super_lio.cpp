@@ -69,8 +69,10 @@ void SuperLIO::init(){
   
   scan_undistort_full_.reset(new PointCloudType());
   ds_undistort_.reset(new PointCloudType());
+  rolling_undistort_.reset(new PointCloudType());
   world_pc_.reset(new PointCloudType());
   ds_world_.reset(new PointCloudType());
+  rolling_scan_window_.clear();
 
   if(g_save_map){
     point_map_.reset(new PointCloudType());
@@ -197,15 +199,18 @@ void SuperLIO::stateProcess(){
   frame_num_++;
   if(g_time_eva){
     time_record_.Evaluate([this](){Propagation_Undistort();}, "[Undistort]");
+    time_record_.Evaluate([this]() { BuildRollingWindowCloud(); }, "[RollingWindow]");
     time_record_.Evaluate([this]() { DownSample(); }, "[DownSample]");
     time_record_.Evaluate([this]() { Observe(); }, "[Observe]");
     time_record_.Evaluate([this]() { UpdateMap(); }, "[UpdateMap]");
   }else{
     Propagation_Undistort();
+    BuildRollingWindowCloud();
     DownSample();
     Observe();
     UpdateMap();
   }
+  PushCurrentScanToRollingWindow();
   Output();
   caceData();
 }
@@ -429,8 +434,66 @@ void SuperLIO::Propagation_Undistort(){
 
 
 void SuperLIO::DownSample(){
-  voxel_grid_fliter_.setInputCloud(scan_undistort_full_);
+  //voxel_grid_fliter_.setInputCloud(scan_undistort_full_);
+  voxel_grid_fliter_.setInputCloud(rolling_undistort_);
   voxel_grid_fliter_.filter(ds_undistort_);
+}
+
+
+void SuperLIO::BuildRollingWindowCloud(){
+  rolling_undistort_->clear();
+  if(scan_undistort_full_->empty()){
+    return;
+  }
+
+  std::size_t reserve_size = scan_undistort_full_->size();
+  for(const auto& scan : rolling_scan_window_){
+    if(scan.cloud){
+      reserve_size += scan.cloud->size();
+    }
+  }
+  rolling_undistort_->reserve(reserve_size);
+  *rolling_undistort_ += *scan_undistort_full_;
+
+  const SE3 current_pose_inv = kf_->GetSE3().inverse();
+  for(auto scan_iter = rolling_scan_window_.rbegin();
+      scan_iter != rolling_scan_window_.rend();
+      ++scan_iter){
+    if(!scan_iter->cloud || scan_iter->cloud->empty()){
+      continue;
+    }
+    const SE3 past_to_current = current_pose_inv * scan_iter->pose;
+    for(const auto& pt : scan_iter->cloud->points){
+      V3 point_body(pt.x, pt.y, pt.z);
+      V3 point_current = past_to_current * point_body;
+      PointType out;
+      out.x = point_current.x();
+      out.y = point_current.y();
+      out.z = point_current.z();
+      out.intensity = pt.intensity;
+      rolling_undistort_->points.push_back(out);
+    }
+  }
+
+  rolling_undistort_->width = rolling_undistort_->points.size();
+  rolling_undistort_->height = 1;
+  rolling_undistort_->is_dense = false;
+}
+
+
+void SuperLIO::PushCurrentScanToRollingWindow(){
+  if(scan_undistort_full_->empty()){
+    return;
+  }
+
+  RollingScan scan;
+  scan.cloud.reset(new PointCloudType(*scan_undistort_full_));
+  scan.pose = kf_->GetSE3();
+  scan.end_time = measures_.lidar.end_time;
+  rolling_scan_window_.push_back(scan);
+  while(rolling_scan_window_.size() > kMaxRollingPastScans){
+    rolling_scan_window_.pop_front();
+  }
 }
 
 
@@ -442,7 +505,9 @@ struct ThreadACC{
 
 
 void SuperLIO::Observe(){
-  size_t ptsize = ds_undistort_->size();
+  const auto& observe_cloud = ds_undistort_;
+  const size_t max_effect_points = sizeof(effect_mask_) / sizeof(effect_mask_[0]);
+  size_t ptsize = std::min(observe_cloud->size(), max_effect_points);
   
   static std::vector<float> _lengths;
   points_body_v3_.resize(ptsize);
@@ -452,7 +517,7 @@ void SuperLIO::Observe(){
   std::iota(effect_knn_idxs_.begin(), effect_knn_idxs_.begin() + ptsize, 0);
 
   for(size_t i = 0; i < ptsize; ++i){
-    const auto& point_body_pcl = ds_undistort_->points[i];
+    const auto& point_body_pcl = observe_cloud->points[i];
     points_body_v3_[i] = V3(point_body_pcl.x, point_body_pcl.y, point_body_pcl.z);
     _lengths[i] = points_body_v3_[i].norm();
   }
@@ -550,8 +615,8 @@ void SuperLIO::UpdateMap() {
   const auto t = last_pose_.t_;
   
   for (size_t i = 0; i < ptsize; ++i) {
-    const auto& pt = points_body_v3_[i];
-    points_world_v3_[i] = R * pt + t;
+    const auto& pt = ds_undistort_->points[i];
+    points_world_v3_[i] = R * V3(pt.x, pt.y, pt.z) + t;
   }
   
   ivox_->insert(points_world_v3_);

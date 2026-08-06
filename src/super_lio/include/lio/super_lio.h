@@ -3,6 +3,7 @@
 #ifndef SUPER_LIO_H_
 #define SUPER_LIO_H_
 
+#include <deque>
 #include <queue>
 #include <vector>
 #include <iostream>
@@ -45,6 +46,8 @@ protected:
   virtual bool map_init();
   void Propagation_Undistort();
   void DownSample();
+  void BuildRollingWindowCloud();
+  void PushCurrentScanToRollingWindow();
   void Observe();
   virtual void UpdateMap();
   virtual void Output();
@@ -66,6 +69,7 @@ protected:
   std::vector<DynamicState> propagate_states_;
   BASIC::CloudPtr scan_undistort_full_;
   BASIC::CloudPtr ds_undistort_;
+  BASIC::CloudPtr rolling_undistort_;
   BASIC::CloudPtr point_map_, world_pc_, ds_world_;
   int frame_num_ = 0;
   BASIC::SE3 sys_init_pose_;
@@ -80,11 +84,19 @@ protected:
   std::vector<std::array<double, 4>> abcd_vec_;
   int pcd_index_ = -1;
 
+  struct RollingScan {
+    BASIC::CloudPtr cloud;
+    BASIC::SE3 pose;
+    double end_time = 0.0;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  };
+  static constexpr std::size_t kMaxRollingPastScans = 1;
+  std::deque<RollingScan, Eigen::aligned_allocator<RollingScan>> rolling_scan_window_;
+
   Timer time_record_;
 };
 
 } // namespace END.
 
 #endif
-
 

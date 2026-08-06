@@ -73,10 +73,12 @@ void SuperLIOReLoc::init(){
   
   scan_undistort_full_.reset(new PointCloudType());
   ds_undistort_.reset(new PointCloudType());
+  rolling_undistort_.reset(new PointCloudType());
   world_pc_.reset(new PointCloudType());
   ds_world_.reset(new PointCloudType());
   point_map_.reset(new PointCloudType());
   init_obs_data_.reset(new PointCloudType());
+  rolling_scan_window_.clear();
   
   points_world_v3_.reserve(21000);
   abcd_vec_.resize(20000);
@@ -290,8 +292,8 @@ void SuperLIOReLoc::UpdateMap() {
   const auto t = last_pose_.t_;
   
   for (size_t i = 0; i < ptsize; ++i) {
-    const auto& pt = points_body_v3_[i];
-    points_world_v3_[i] = R * pt + t;
+    const auto& pt = ds_undistort_->points[i];
+    points_world_v3_[i] = R * V3(pt.x, pt.y, pt.z) + t;
   }
   
   ivox_->insert(points_world_v3_);
