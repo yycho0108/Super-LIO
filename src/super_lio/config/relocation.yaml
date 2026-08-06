@@ -38,6 +38,14 @@
     lio.kf.kf_align_gravity: true
     lio.kf.kf_quit_eps: 0.001
 
+
+    lio.kf.kf_rematch_iterations: 3
+    lio.match.plane_fit_dist_thresh: 0.10
+    lio.match.residual_gate_scale: 81.0
+    lio.match.point_plane_weight: 1000.0
+    lio.match.min_plane_points: 4
+    lio.match.rolling_window_size: 0
+
     lio.submap.submap_resolution: 0.5
     lio.submap.submap_capacity: 1000000
 

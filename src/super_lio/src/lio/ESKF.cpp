@@ -269,7 +269,7 @@ bool ESKF::UpdateObserve(ESKF::ObsFunc obs) {
   need_converge_ = false;
 
   for (int iter = 0; iter < options_.num_iterations_; ++iter) {
-    if (iter > 2) {
+    if (iter >= g_kf_rematch_iterations) {
       need_converge_ = true;
     }
 

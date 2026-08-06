@@ -68,6 +68,7 @@ protected:
   bool flg_first_scan_ = true;
   std::vector<DynamicState> propagate_states_;
   BASIC::CloudPtr scan_undistort_full_;
+  BASIC::CloudPtr ds_current_;
   BASIC::CloudPtr ds_undistort_;
   BASIC::CloudPtr rolling_undistort_;
   BASIC::CloudPtr point_map_, world_pc_, ds_world_;
@@ -90,7 +91,6 @@ protected:
     double end_time = 0.0;
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   };
-  static constexpr std::size_t kMaxRollingPastScans = 1;
   std::deque<RollingScan, Eigen::aligned_allocator<RollingScan>> rolling_scan_window_;
 
   Timer time_record_;
@@ -99,4 +99,3 @@ protected:
 } // namespace END.
 
 #endif
-

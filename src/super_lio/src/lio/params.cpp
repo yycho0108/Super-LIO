@@ -49,8 +49,16 @@ namespace LI2Sup{
   /// kf
   int g_kf_type = 1;                // 1: ESKF, 2: InESKF
   int g_kf_max_iterations = 4;
+  int g_kf_rematch_iterations = 3;
   bool g_kf_align_gravity = true;
   double g_kf_quit_eps;
+
+  /// scan matching
+  double g_match_plane_fit_dist_thresh = 0.1;
+  double g_match_residual_gate_scale = 81.0;
+  double g_match_point_plane_weight = 1000.0;
+  int    g_match_min_plane_points = 4;
+  std::size_t g_match_rolling_window_size = 0;
 
   /// submap 
   double g_submap_resolution;

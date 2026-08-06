@@ -51,7 +51,7 @@ inline bool calc_plane_coeff(const int N, const std::array<V3, 5>& points, std::
   for (int i = 0; i < N; ++i) {
     const V3& p = points[i];
     auto dist = abcd[0] * p(0) + abcd[1] * p(1) + abcd[2] * p(2) + abcd[3];
-    if (std::abs(dist) > 0.1) return false;
+    if (std::abs(dist) > g_match_plane_fit_dist_thresh) return false;
   }
   return true;
 }
@@ -62,7 +62,7 @@ inline bool compute_error(
   const float length, scalar& error)
 {
   error = abcd[0] * point[0] + abcd[1] * point[1] + abcd[2] * point[2] + abcd[3];
-  return length > 81 * error * error;
+  return length > g_match_residual_gate_scale * error * error;
 }
 
 
@@ -72,6 +72,7 @@ void SuperLIOReLoc::init(){
   data_wrapper_->setESKF(kf_);
   
   scan_undistort_full_.reset(new PointCloudType());
+  ds_current_.reset(new PointCloudType());
   ds_undistort_.reset(new PointCloudType());
   rolling_undistort_.reset(new PointCloudType());
   world_pc_.reset(new PointCloudType());
@@ -282,7 +283,7 @@ void SuperLIOReLoc::UpdateMap() {
     return;
   }
 
-  const size_t ptsize = ds_undistort_->size();
+  const size_t ptsize = ds_current_->size();
   if (ptsize == 0) return;
   
   last_pose_ = kf_->GetSE3();
@@ -292,7 +293,7 @@ void SuperLIOReLoc::UpdateMap() {
   const auto t = last_pose_.t_;
   
   for (size_t i = 0; i < ptsize; ++i) {
-    const auto& pt = ds_undistort_->points[i];
+    const auto& pt = ds_current_->points[i];
     points_world_v3_[i] = R * V3(pt.x, pt.y, pt.z) + t;
   }
   
@@ -322,7 +323,7 @@ void SuperLIOReLoc::Output() {
       pcl::transformPointCloud(*scan_undistort_full_, *world_pc, transformation);
       data_wrapper_->pub_cloud_world(world_pc, state.timestamp);
     }else{
-      pcl::transformPointCloud(*ds_undistort_, *world_pc, transformation);
+      pcl::transformPointCloud(*ds_current_, *world_pc, transformation);
       data_wrapper_->pub_cloud_world(world_pc, state.timestamp);
     }
   }

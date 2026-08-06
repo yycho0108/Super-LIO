@@ -2,6 +2,8 @@
 #include "ros/ROSWrapper.h"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 
+#include <algorithm>
+
 
 using namespace BASIC;
 
@@ -136,11 +138,37 @@ void LoadParamFromRos(rclcpp::Node& node)
   node.declare_parameter<int>("lio.kf.kf_max_iterations", 0);
   node.get_parameter("lio.kf.kf_max_iterations", g_kf_max_iterations);
 
+  node.declare_parameter<int>("lio.kf.kf_rematch_iterations", 3);
+  node.get_parameter("lio.kf.kf_rematch_iterations", g_kf_rematch_iterations);
+  g_kf_rematch_iterations = std::max(1, g_kf_rematch_iterations);
+
   node.declare_parameter<bool>("lio.kf.kf_align_gravity", false);
   node.get_parameter("lio.kf.kf_align_gravity", g_kf_align_gravity);
 
   node.declare_parameter<double>("lio.kf.kf_quit_eps", 0.0);
   node.get_parameter("lio.kf.kf_quit_eps", g_kf_quit_eps);
+
+  node.declare_parameter<double>("lio.match.plane_fit_dist_thresh", 0.1);
+  node.get_parameter("lio.match.plane_fit_dist_thresh", g_match_plane_fit_dist_thresh);
+  g_match_plane_fit_dist_thresh = std::max(0.0, g_match_plane_fit_dist_thresh);
+
+  node.declare_parameter<double>("lio.match.residual_gate_scale", 81.0);
+  node.get_parameter("lio.match.residual_gate_scale", g_match_residual_gate_scale);
+  g_match_residual_gate_scale = std::max(0.0, g_match_residual_gate_scale);
+
+  node.declare_parameter<double>("lio.match.point_plane_weight", 1000.0);
+  node.get_parameter("lio.match.point_plane_weight", g_match_point_plane_weight);
+  g_match_point_plane_weight = std::max(0.0, g_match_point_plane_weight);
+
+  node.declare_parameter<int>("lio.match.min_plane_points", 4);
+  node.get_parameter("lio.match.min_plane_points", g_match_min_plane_points);
+  g_match_min_plane_points = std::clamp(g_match_min_plane_points, 1, 5);
+
+  int rolling_window_size = 0;
+  node.declare_parameter<int>("lio.match.rolling_window_size", 0);
+  node.get_parameter("lio.match.rolling_window_size", rolling_window_size);
+  g_match_rolling_window_size = static_cast<std::size_t>(
+      std::clamp(rolling_window_size, 0, 3));
 
   // submaps
   node.declare_parameter<double>("lio.submap.submap_resolution", 0.0);
