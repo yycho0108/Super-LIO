@@ -23,7 +23,7 @@
     lio.sensor.gravity_norm: 9.81
     lio.sensor.imu_type: 1
     # Values recorded in dump6/config/config_sensors.json.
-    lio.sensor.imu_na: 0.1
+    lio.sensor.imu_na: 0.5
     #lio.sensor.imu_ng: 0.02
     #lio.sensor.imu_na: 0.25
     #lio.sensor.imu_na: 1.0
@@ -55,11 +55,11 @@
     lio.kf.kf_type: 0
     #lio.kf.kf_max_iterations: 16
     lio.kf.kf_max_iterations: 8
-    lio.kf.kf_rematch_iterations: 4
+    lio.kf.kf_rematch_iterations: 3
     lio.kf.kf_align_gravity: false
     lio.kf.kf_quit_eps: 0.001
 
-    lio.match.plane_fit_dist_thresh: 0.10
+    lio.match.plane_fit_dist_thresh: 0.20
     lio.match.residual_gate_scale: 81.0
     lio.match.point_plane_weight: 40000.0
     #lio.match.point_plane_weight: 40000.0
@@ -99,7 +99,7 @@
     lio.debug.export_time: 1785831616.1224
     # lio.debug.export_time: 1785831615.652487
     # lio.debug.export_time: 1785831615.706771294
-    lio.debug.export_dir: "debug_step"
+    lio.debug.export_dir: ""
 
     #lio.debug.export_iteration: 120       # save the 120th synchronized lidar step
     #lio.debug.export_time: -1.0           # disabled if < 0
