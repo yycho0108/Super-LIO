@@ -1,8 +1,27 @@
-# 2026-08-04 GLIM vs Super LIO replay
+# GLIM vs Super LIO replay
 
-아홉 개 실험에 같은 frame/URDF/Viser 로직을 사용하는 실행기입니다. 앞의 네 run은
-GLIM과 Super-LIO를 비교하고, 뒤의 다섯 run은 GLIM dump가 없으므로 Super-LIO만
-재생합니다.
+모든 실험에 같은 frame/URDF/Viser 로직을 사용하는 실행기입니다.
+
+## 새 rosbag 공통 실행
+
+bag별 실행 스크립트를 새로 만들 필요 없이 원본 bag 경로만 전달합니다. 별도 topic
+추출 없이 rosbag DB에서 `/lio/odom`, `/lowstate`, TF, `/augmented_map`,
+`/lio/cloud_world`를 직접 읽습니다.
+
+```bash
+cd ~/ws/src/Super-LIO/localization_replay
+./run_localization_replay.sh \
+  /workspace/rosbag/rosbag2_2026_08_06-07_23_29
+```
+
+같은 디렉터리의 같은 날짜/시간 `glim_rosbag2_*`에서 `traj_imu.txt`와
+`traj_lidar.txt`를 자동 탐색합니다. GLIM pair가 없으면 Super-LIO-only 모드로
+자동 실행됩니다. 자동 탐색이 불가능한 위치라면 두 번째 인자로 GLIM 디렉터리
+또는 `traj_imu.txt`를 지정합니다.
+
+```bash
+./run_localization_replay.sh ROSBAG_PATH GLIM_PATH --port 8090
+```
 
 ## 새 컴퓨터에서 준비
 
