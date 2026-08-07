@@ -37,7 +37,7 @@ from replay_data import (
     load_odometry_only,
     load_pcd,
     load_trajectory,
-    remove_trajectory_pose_matches,
+    remove_odometry_pose_matches,
 )
 
 
@@ -109,8 +109,26 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help=(
-            "Original experiment bag. It supplies the recorded live /lio/odom "
-            "and the fixed one-pose map-frame anchor."
+            "Optional replay-context bag for compact evaluation bags. "
+            "It is not used for GLIM spatial alignment."
+        ),
+    )
+    parser.add_argument(
+        "--spatial-anchor-bag",
+        type=Path,
+        default=None,
+        help=(
+            "Independent bag whose LIO IMU pose fixes the one T_MAP_GLIM "
+            "transform. Use the same bag for every parameter candidate."
+        ),
+    )
+    parser.add_argument(
+        "--use-bag-context",
+        action="store_true",
+        help=(
+            "Load LowState, TF, /augmented_map, and /lio/cloud_world from "
+            "--bag itself. This is intended for complete versioned "
+            "reprocessed Super-LIO bags."
         ),
     )
     parser.add_argument(
@@ -190,6 +208,11 @@ def parse_args() -> argparse.Namespace:
     ):
         parser.error(
             "post-recovery alignment requires GLIM and the initial spatial anchor"
+        )
+    if args.post_recovery_align_steps and args.spatial_anchor_bag is not None:
+        parser.error(
+            "post-recovery candidate fitting cannot be combined with an "
+            "independent --spatial-anchor-bag"
         )
     if args.source_bag is None:
         args.source_bag = args.data_root.expanduser() / _source_directory_name(
@@ -345,10 +368,14 @@ def load_inputs(args: argparse.Namespace):
             f"Original replay source bag not found: {args.source_bag}"
         )
     same_as_original = args.bag.resolve() == args.source_bag.resolve()
-    # For a clean offline evaluation bag, only /lio/odom is newly generated.
-    # LowState, physical TF and augmented_map remain the immutable source-run
-    # context, avoiding duplicated multi-gigabyte sensor data and mixed topics.
-    context_bag_path = args.bag if same_as_original else args.source_bag
+    # Old compact evaluation bags may contain only newly generated /lio/odom,
+    # while complete versioned reprocessing bags contain their own LowState,
+    # TF and point clouds. The caller selects which bag supplies replay context.
+    context_bag_path = (
+        args.bag
+        if same_as_original or args.use_bag_context
+        else args.source_bag
+    )
     bag = load_bag(
         args.run_id,
         context_bag_path,
@@ -357,14 +384,13 @@ def load_inputs(args: argparse.Namespace):
             "/glim_ros/odom",
             "/lio/imu/odom",
             "/lio/odom",
-            "/odometry/odom",
         ),
         pointcloud_topics=("/augmented_map", "/lio/cloud_world"),
     )
     _required_tf(bag, "map", "world", bag.start_time)
     _required_tf(bag, "mid360_link", "mid360_link_frame", bag.start_time)
     _audit_sensor_tf(bag)
-    if same_as_original:
+    if context_bag_path.resolve() == args.bag.resolve():
         evaluation_odometry = bag.odometry
     else:
         evaluation_odometry = load_odometry_only(
@@ -383,6 +409,28 @@ def load_inputs(args: argparse.Namespace):
         raise KeyError(
             f"Neither /lio/imu/odom nor /lio/odom exists in {args.bag}"
         )
+    removed_replayed_poses = 0
+    if not same_as_original and lio_topic == "/lio/odom":
+        if context_bag_path.resolve() == args.source_bag.resolve():
+            source_odometry = bag.odometry
+        else:
+            source_odometry = load_odometry_only(
+                args.source_bag,
+                topics=("/lio/imu/odom", "/lio/odom"),
+            )
+        if lio_topic not in source_odometry:
+            raise KeyError(f"{lio_topic} is absent from {args.source_bag}")
+        filtered_odometry, removed_replayed_poses = (
+            remove_odometry_pose_matches(
+                evaluation_odometry[lio_topic], source_odometry[lio_topic]
+            )
+        )
+        evaluation_odometry = dict(evaluation_odometry)
+        evaluation_odometry[lio_topic] = filtered_odometry
+        if context_bag_path.resolve() == args.bag.resolve():
+            # Point-cloud and LowState record-time lookup must follow the new
+            # reprocessed stream, not the replayed original messages.
+            bag.odometry[lio_topic] = filtered_odometry
     lio = _trajectory_from_odometry(
         "Super LIO IMU",
         bag.key,
@@ -390,8 +438,22 @@ def load_inputs(args: argparse.Namespace):
         evaluation_odometry[lio_topic],
         (67, 190, 113),
     )
-    source_odometry = bag.odometry
-    if same_as_original:
+    if args.use_bag_context:
+        lio.filter_note = (
+            f"selected reprocessed bag /lio/odom; removed "
+            f"{removed_replayed_poses:,} poses replayed from the original; "
+            f"kept {len(lio.times):,} newly processed poses"
+            if removed_replayed_poses
+            else "exact selected reprocessed bag /lio/odom; no replayed "
+            "original poses matched"
+        )
+        print(
+            f"  Super-LIO source: exact selected bag with "
+            f"{len(lio.times):,} poses from {args.bag}; LowState, TF and "
+            "point clouds also come from this exact bag.",
+            flush=True,
+        )
+    elif same_as_original:
         lio.filter_note = (
             "original experiment /lio/odom; no re-recorded stream and no filtering"
         )
@@ -408,13 +470,8 @@ def load_inputs(args: argparse.Namespace):
             flush=True,
         )
 
-    if not same_as_original and lio_topic == "/lio/odom":
-        if lio_topic not in source_odometry:
-            raise KeyError(f"{lio_topic} is absent from {args.source_bag}")
-        removed = remove_trajectory_pose_matches(
-            lio, source_odometry[lio_topic]
-        )
-        if removed == 0:
+    if not same_as_original and not args.use_bag_context and lio_topic == "/lio/odom":
+        if removed_replayed_poses == 0:
             lio.filter_note = (
                 "clean offline localization /lio/odom; no exact original "
                 "replay poses were mixed into this topic"
@@ -425,8 +482,13 @@ def load_inputs(args: argparse.Namespace):
                 flush=True,
             )
         else:
+            lio.filter_note = (
+                f"removed {removed_replayed_poses:,} replayed poses; kept "
+                f"{len(lio.times):,} localization-only poses"
+            )
             print(
-                f"  Super-LIO stream separation: removed {removed:,} poses "
+                f"  Super-LIO stream separation: removed "
+                f"{removed_replayed_poses:,} poses "
                 f"replayed from {args.source_bag}; kept {len(lio.times):,} "
                 "localization-only poses.",
                 flush=True,
@@ -466,23 +528,6 @@ def load_inputs(args: argparse.Namespace):
         args.bag,
         args.data_root,
     )
-    glim_lidar_path = glim_path.with_name("traj_lidar.txt")
-    if not glim_lidar_path.is_file():
-        raise FileNotFoundError(
-            "Fixed map-frame anchoring requires the matching "
-            f"traj_lidar.txt: {glim_lidar_path}"
-        )
-    glim_lidar = load_trajectory(
-        TrajectorySpec(
-            name="GLIM LiDAR calibration pose",
-            path=glim_lidar_path,
-            bag_key=bag.key,
-            quat_order="xyzw",
-            color=(239, 83, 80),
-            time_mode="raw_sensor",
-        )
-    )
-
     if "/glim_ros/odom_corrected" in bag.odometry:
         glim_source = "/glim_ros/odom_corrected in the selected bag"
         glim = _trajectory_from_odometry(
@@ -518,90 +563,56 @@ def load_inputs(args: argparse.Namespace):
     if common_end <= common_start:
         raise RuntimeError("GLIM and Super LIO have no common sensor timestamp interval")
 
-    if "/odometry/odom" not in source_odometry:
-        raise KeyError(
-            "Fixed map-frame anchoring requires /odometry/odom in "
-            f"the original source bag: {args.source_bag}"
-        )
-    map_lidar = _trajectory_from_odometry(
-        "Map-frame GLIM LiDAR calibration pose",
-        bag.key,
-        "/odometry/odom",
-        source_odometry["/odometry/odom"],
-        (239, 83, 80),
-    )
-
-    print("[3/4] Computing fixed one-pose map <- GLIM frame anchor...", flush=True)
+    print("[3/4] Computing one fixed IMU start-pose anchor...", flush=True)
     spatial_alignment = np.eye(4, dtype=np.float64)
     if not args.no_spatial_align:
-        calibration_start = max(map_lidar.times[0], glim_lidar.times[0])
-        calibration_end = min(map_lidar.times[-1], glim_lidar.times[-1])
-        if calibration_end <= calibration_start:
+        anchor_lio = lio
+        anchor_description = "selected evaluation bag"
+        if args.spatial_anchor_bag is not None:
+            anchor_path = args.spatial_anchor_bag.expanduser().resolve()
+            if not anchor_path.exists():
+                raise FileNotFoundError(
+                    f"Spatial anchor bag not found: {anchor_path}"
+                )
+            anchor_odometry = load_odometry_only(
+                anchor_path, topics=("/lio/imu/odom", "/lio/odom")
+            )
+            anchor_topic = next(
+                (
+                    topic
+                    for topic in ("/lio/imu/odom", "/lio/odom")
+                    if topic in anchor_odometry
+                ),
+                None,
+            )
+            if anchor_topic is None:
+                raise KeyError(
+                    f"No LIO IMU odometry exists in anchor bag {anchor_path}"
+                )
+            anchor_lio = _trajectory_from_odometry(
+                "Independent spatial anchor IMU",
+                bag.key,
+                anchor_topic,
+                anchor_odometry[anchor_topic],
+                (0, 0, 0),
+            )
+            anchor_description = f"independent source bag {anchor_path}:{anchor_topic}"
+        calibration_start = max(anchor_lio.times[0], glim.times[0])
+        if calibration_start > min(anchor_lio.times[-1], glim.times[-1]):
             raise RuntimeError(
-                "/odometry/odom and traj_lidar.txt have no common sensor "
-                "timestamp for map-frame calibration"
+                "Spatial anchor LIO and GLIM have no common sensor timestamp"
             )
-        map_position, map_quaternion, _ = map_lidar.sample(calibration_start)
-        glim_lidar_position, glim_lidar_quaternion, _ = glim_lidar.sample(
-            calibration_start
-        )
-        if same_as_original:
-            lio_position, lio_quaternion, _ = lio.sample(calibration_start)
-            map_from_world = _required_tf(
-                bag, "map", "world", bag.start_time
-            )
-            observed_imu_from_lidar = np.linalg.inv(
-                map_from_world @ pose_matrix(lio_position, lio_quaternion)
-            ) @ pose_matrix(map_position, map_quaternion)
-            expected_imu_from_lidar = np.linalg.inv(
-                _required_tf(
-                    bag,
-                    "mid360_link_frame",
-                    "mid360_link_IMU",
-                    bag.start_time,
-                )
-            )
-            source_translation_error = float(
-                np.linalg.norm(
-                    observed_imu_from_lidar[:3, 3]
-                    - expected_imu_from_lidar[:3, 3]
-                )
-            )
-            source_rotation_error = float(
-                np.rad2deg(
-                    Rotation.from_matrix(
-                        observed_imu_from_lidar[:3, :3].T
-                        @ expected_imu_from_lidar[:3, :3]
-                    ).magnitude()
-                )
-            )
-            if (
-                source_translation_error > 1.0e-5
-                or source_rotation_error > 1.0e-4
-            ):
-                raise RuntimeError(
-                    "Original /odometry/odom is not the expected "
-                    "/lio/odom @ T_IMU_LIDAR stream: translation error "
-                    f"{source_translation_error:.6f} m, rotation error "
-                    f"{source_rotation_error:.6f} deg"
-                )
-            print(
-                "  Source frame audit: /odometry/odom equals recorded live "
-                "/lio/odom @ T_IMU_LIDAR at the anchor pose.",
-                flush=True,
-            )
+        lio_position, lio_quaternion, _ = anchor_lio.sample(calibration_start)
+        glim_position, glim_quaternion, _ = glim.sample(calibration_start)
         spatial_alignment = pose_matrix(
-            map_position, map_quaternion
-        ) @ np.linalg.inv(
-            pose_matrix(glim_lidar_position, glim_lidar_quaternion)
-        )
+            lio_position, lio_quaternion
+        ) @ np.linalg.inv(pose_matrix(glim_position, glim_quaternion))
         note = (
-            "fixed one-pose T_MAP_GLIM = "
-            "T_MAP_LIDAR(/odometry/odom) @ "
-            "inverse(T_GLIM_LIDAR(traj_lidar.txt)) at sensor timestamp "
-            f"{calibration_start:.9f}; /odometry/odom is the recorded live "
-            "Super-LIO pose composed with T_IMU_LIDAR; no trajectory fitting "
-            "or per-frame alignment was used"
+            "candidate-independent fixed start-pose T_MAP_GLIM = "
+            f"T_MAP_IMU({anchor_description}) @ "
+            "inverse(T_GLIM_IMU(traj_imu.txt)) at first common sensor "
+            f"timestamp {calibration_start:.9f}; no LiDAR pose, "
+            "/odometry/odom, trajectory fitting, or per-frame alignment was used"
         )
         apply_spatial_transform(glim, spatial_alignment, note)
         if args.post_recovery_align_steps > 0:
@@ -886,11 +897,20 @@ def error_figure(
     shared_limit = max(max_absolute_error * 1.12, 1.0e-4)
     figure.update_yaxes(
         tickformat=".3f",
-        range=(-shared_limit, shared_limit),
-        autorange=False,
         zeroline=True,
         zerolinecolor="#808080",
     )
+    figure.update_yaxes(
+        range=(-shared_limit, shared_limit),
+        autorange=False,
+        row=1,
+        col=1,
+    )
+    # Plotly otherwise keeps the four subplot ranges as independent UI state.
+    # Match x/y/z to the first y axis so every zoom/autoscale operation uses
+    # exactly the same numeric range and tick spacing.
+    for row in range(2, 5):
+        figure.update_yaxes(matches="y", row=row, col=1)
     return figure
 
 
@@ -1402,14 +1422,14 @@ class DualReplayApp:
                 "Fixed start-frame anchor", expand_by_default=False
             ):
                 gui.add_markdown(
-                    "같은 run의 원본 bag과 GLIM dump의 첫 대응 pose에서 계산한 "
-                    "SE(3) **하나만** 모든 GLIM pose에 동일하게 왼쪽 곱합니다. "
-                    "원본 bag의 `/odometry/odom`은 recorded live Super-LIO pose에 "
-                    "IMU→LiDAR extrinsic을 곱한 값입니다. 따라서 이는 독립 측량 "
-                    "calibration이 아니라 **초기 frame anchor**이며 trajectory "
-                    "fitting은 하지 않습니다.\n\n"
-                    "`T_MAP_GLIM = T_MAP_LIDAR(/odometry/odom) · "
-                    "inverse(T_GLIM_LIDAR(traj_lidar.txt))`\n\n"
+                    "선택한 bag의 `/lio/odom`과 GLIM `traj_imu.txt`가 처음 "
+                    "함께 존재하는 sensor timestamp에서 계산한 SE(3) "
+                    "**하나만** 모든 GLIM pose에 동일하게 왼쪽 곱합니다. "
+                    "LiDAR pose와 `/odometry/odom`은 사용하지 않으며, 이 방식은 "
+                    "각 bag의 시작 pose 오차를 제거한 뒤 상대 tracking 차이를 "
+                    "평가합니다.\n\n"
+                    "`T_MAP_GLIM = T_MAP_IMU(/lio/odom, t0) · "
+                    "inverse(T_GLIM_IMU(traj_imu.txt, t0))`\n\n"
                     f"{self.glim.spatial_alignment_note}\n\n"
                     "```text\n"
                     + np.array2string(
@@ -1886,12 +1906,13 @@ class DualReplayApp:
 
     const sharedLimit = Math.max(maxAbsoluteError * 1.12, 1e-4);
     const sharedRange = [-sharedLimit, sharedLimit];
-    const relayout = {};
-    for (let traceIndex = 0; traceIndex < 4; ++traceIndex) {
-      const axisName = traceIndex === 0 ? 'yaxis' : `yaxis${traceIndex + 1}`;
-      relayout[`${axisName}.range`] = sharedRange;
-      relayout[`${axisName}.autorange`] = false;
-    }
+    const relayout = {
+      'yaxis.range': sharedRange,
+      'yaxis.autorange': false,
+      'yaxis2.matches': 'y',
+      'yaxis3.matches': 'y',
+      'yaxis4.matches': 'y',
+    };
 
     plot.__g1AutoscalingY = true;
     Promise.resolve(window.Plotly.relayout(plot, relayout)).finally(() => {

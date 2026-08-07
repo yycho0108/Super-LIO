@@ -9,3 +9,4 @@ install
 src/CMakeLists.txt
 __pycache__
 localization_replay/.venv/
+localization_replay/optimization_runs/

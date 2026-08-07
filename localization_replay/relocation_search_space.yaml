@@ -1,0 +1,75 @@
+profiles:
+  imu:
+    - lio.sensor.imu_na
+    - lio.sensor.imu_ng
+    - lio.sensor.imu_nba
+    - lio.sensor.imu_nbg
+  core:
+    - lio.sensor.imu_na
+    - lio.sensor.imu_ng
+    - lio.sensor.imu_nba
+    - lio.sensor.imu_nbg
+    - lio.sensor.voxel_fliter_size
+    - lio.hash_map.vox_resolution
+    - lio.kf.kf_max_iterations
+    - lio.kf.kf_rematch_iterations
+    - lio.kf.kf_quit_eps
+    - lio.match.plane_fit_dist_thresh
+    - lio.match.residual_gate_scale
+    - lio.match.point_plane_weight
+    - lio.match.min_plane_points
+  full:
+    - lio.sensor.imu_na
+    - lio.sensor.imu_ng
+    - lio.sensor.imu_nba
+    - lio.sensor.imu_nbg
+    - lio.sensor.voxel_fliter_size
+    - lio.sensor.filter_rate
+    - lio.hash_map.vox_resolution
+    - lio.kf.kf_max_iterations
+    - lio.kf.kf_rematch_iterations
+    - lio.kf.kf_quit_eps
+    - lio.match.plane_fit_dist_thresh
+    - lio.match.residual_gate_scale
+    - lio.match.point_plane_weight
+    - lio.match.min_plane_points
+    - lio.match.rolling_window_size
+
+parameters:
+  lio.sensor.imu_na:
+    values: [0.00125, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.2, 0.5]
+  lio.sensor.imu_ng:
+    values: [0.0002, 0.0004, 0.001, 0.002, 0.005, 0.01, 0.02]
+  lio.sensor.imu_nba:
+    values: [0.000005, 0.00001, 0.00005, 0.0001]
+  lio.sensor.imu_nbg:
+    values: [0.000005, 0.00001, 0.00005, 0.0001]
+  lio.sensor.voxel_fliter_size:
+    values: [0.08, 0.10, 0.12, 0.15, 0.18, 0.22]
+  lio.sensor.filter_rate:
+    values: [1, 2, 3]
+  lio.hash_map.vox_resolution:
+    values: [0.08, 0.10, 0.12, 0.15, 0.20, 0.25]
+  lio.kf.kf_max_iterations:
+    values: [4, 6, 8, 10, 12]
+  lio.kf.kf_rematch_iterations:
+    values: [2, 3, 4, 5]
+  lio.kf.kf_quit_eps:
+    values: [0.000001, 0.000005, 0.00001, 0.00005, 0.0001]
+  lio.match.plane_fit_dist_thresh:
+    values: [0.05, 0.075, 0.10, 0.15, 0.20]
+  lio.match.residual_gate_scale:
+    values: [25.0, 49.0, 81.0, 121.0, 169.0]
+  lio.match.point_plane_weight:
+    values: [10000.0, 30000.0, 100000.0, 300000.0]
+  lio.match.min_plane_points:
+    values: [3, 4, 5]
+  lio.match.rolling_window_size:
+    values: [0, 1, 2, 3]
+
+# Deliberately excluded from automatic tuning:
+# - lidar/IMU extrinsics, gravity norm, lidar type/topics: physical calibration
+# - relocation init_pose/map name: experiment definition, not estimator tuning
+# - enable_downsample, kf_type, kf_align_gravity, submap_*: loaded but unused
+#   by the current relocation implementation
+# - QoS depths: transport integrity settings; keep high enough to prevent loss
