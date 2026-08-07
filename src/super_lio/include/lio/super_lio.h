@@ -55,6 +55,7 @@ protected:
   void caceData();
   void ProcessCaceMap();
   void MaybeExportDebugStep();
+  void SmoothPropagateStatesForDeskew();
 
   using StateFn = void (SuperLIO::*)();
   using OctVoxMapType = OctVoxMap<BASIC::V3, BASIC::scalar>;

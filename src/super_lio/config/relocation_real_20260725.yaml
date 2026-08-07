@@ -61,10 +61,16 @@
 
     lio.match.plane_fit_dist_thresh: 0.10
     lio.match.residual_gate_scale: 81.0
-    #lio.match.point_plane_weight: 100000.0
-    lio.match.point_plane_weight: 40000.0
+    lio.match.point_plane_weight: 100000.0
+    #lio.match.point_plane_weight: 40000.0
     lio.match.min_plane_points: 4
     lio.match.rolling_window_size: 0
+
+    # Optional backward smoothing of propagated IMU states used for deskewing.
+    # Disabled by default to preserve existing propagation behavior.
+    lio.deskew.rts_smoothing_enable: true
+    lio.deskew.rts_smoothing_passes: 4
+    lio.deskew.rts_smoothing_gain: 0.25
 
     lio.submap.submap_resolution: 0.5
     lio.submap.submap_capacity: 200000

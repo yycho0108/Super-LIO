@@ -170,6 +170,17 @@ void LoadParamFromRos(rclcpp::Node& node)
   g_match_rolling_window_size = static_cast<std::size_t>(
       std::clamp(rolling_window_size, 0, 3));
 
+  node.declare_parameter<bool>("lio.deskew.rts_smoothing_enable", false);
+  node.get_parameter("lio.deskew.rts_smoothing_enable", g_deskew_rts_smoothing_enable);
+
+  node.declare_parameter<int>("lio.deskew.rts_smoothing_passes", 1);
+  node.get_parameter("lio.deskew.rts_smoothing_passes", g_deskew_rts_smoothing_passes);
+  g_deskew_rts_smoothing_passes = std::clamp(g_deskew_rts_smoothing_passes, 1, 5);
+
+  node.declare_parameter<double>("lio.deskew.rts_smoothing_gain", 0.25);
+  node.get_parameter("lio.deskew.rts_smoothing_gain", g_deskew_rts_smoothing_gain);
+  g_deskew_rts_smoothing_gain = std::clamp(g_deskew_rts_smoothing_gain, 0.0, 1.0);
+
   // submaps
   node.declare_parameter<double>("lio.submap.submap_resolution", 0.0);
   node.get_parameter("lio.submap.submap_resolution", g_submap_resolution);

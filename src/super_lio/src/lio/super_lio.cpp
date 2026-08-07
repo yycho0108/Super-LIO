@@ -419,6 +419,7 @@ void SuperLIO::Propagation_Undistort(){
     kf_->Predict(imu);
     propagate_states_.emplace_back(kf_->GetDynamicState());
   }
+  SmoothPropagateStatesForDeskew();
 
   static const M3 TLI_R = g_lidar_imu.R_;
   static const V3 TLI_t = g_lidar_imu.t_;
@@ -476,6 +477,47 @@ void SuperLIO::Propagation_Undistort(){
       pt_full.z = eigen_point[2];
     }
   });
+}
+
+
+void SuperLIO::SmoothPropagateStatesForDeskew(){
+  if(!g_deskew_rts_smoothing_enable || propagate_states_.size() < 3){
+    return;
+  }
+
+  const scalar gain = static_cast<scalar>(g_deskew_rts_smoothing_gain);
+  if(gain <= scalar(0)){
+    return;
+  }
+
+  for(int pass = 0; pass < g_deskew_rts_smoothing_passes; ++pass){
+    for(int i = static_cast<int>(propagate_states_.size()) - 2; i >= 0; --i){
+      auto& state = propagate_states_[i];
+      const auto& next = propagate_states_[i + 1];
+      const scalar dt = static_cast<scalar>(next.time - state.time);
+      if(dt <= scalar(0) || dt > scalar(0.2)){
+        continue;
+      }
+
+      const M3 delta_R = SO3::Exp(state.w, dt).R_;
+      const M3 target_R = next.R * delta_R.transpose();
+      Quat q_state(state.R);
+      Quat q_target(target_R);
+      q_state.normalize();
+      q_target.normalize();
+      state.R = q_state.slerp(gain, q_target).toRotationMatrix();
+
+      const V3 target_p =
+          next.p - (next.v - next.a * dt) * dt - scalar(0.5) * next.a * dt * dt;
+      state.p = (scalar(1) - gain) * state.p + gain * target_p;
+
+      const V3 target_v = next.v - next.a * dt;
+      state.v = (scalar(1) - gain) * state.v + gain * target_v;
+
+      state.a = (scalar(1) - gain) * state.a + gain * next.a;
+      state.w = (scalar(1) - gain) * state.w + gain * next.w;
+    }
+  }
 }
 
 

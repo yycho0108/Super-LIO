@@ -77,6 +77,11 @@ namespace LI2Sup{
   extern int    g_match_min_plane_points;
   extern std::size_t g_match_rolling_window_size;
 
+  /// deskew propagation smoothing
+  extern bool   g_deskew_rts_smoothing_enable;
+  extern int    g_deskew_rts_smoothing_passes;
+  extern double g_deskew_rts_smoothing_gain;
+
   /// submaps
   extern double g_submap_resolution;
   extern int    g_submap_capacity;
