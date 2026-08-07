@@ -1,0 +1,136 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Global Options:
+    Background Color: 18; 18; 22
+    Fixed Frame: world
+    Frame Rate: 30
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Ground grid
+      Enabled: true
+      Cell Size: 1
+      Plane: XY
+      Plane Cell Count: 50
+      Color: 90; 90; 95
+      Alpha: 0.35
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Prebuilt map (fixed)
+      Enabled: true
+      Topic:
+        Value: /localization/prebuilt_map
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Depth: 1
+      Color Transformer: FlatColor
+      Color: 175; 180; 190
+      Position Transformer: XYZ
+      Style: Points
+      Size (Pixels): 3
+      Alpha: 0.72
+      Decay Time: 0
+    - Class: rviz_default_plugins/PointCloud2
+      Name: GLIM generated cloud (magenta)
+      Enabled: true
+      Topic:
+        Value: /comparison/glim_live_cloud
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Depth: 1
+      Color Transformer: FlatColor
+      Color: 255; 35; 255
+      Position Transformer: XYZ
+      Style: Points
+      Size (Pixels): 2
+      Alpha: 0.38
+      Decay Time: 0
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Super-LIO registered scans (green)
+      Enabled: true
+      Topic:
+        Value: /comparison/super_lio_registered_cloud
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Depth: 1
+      Color Transformer: FlatColor
+      Color: 25; 255; 60
+      Position Transformer: XYZ
+      Style: Points
+      Size (Pixels): 2
+      Alpha: 0.38
+      Decay Time: 0
+    - Class: rviz_default_plugins/Path
+      Name: GLIM reference (magenta)
+      Enabled: true
+      Topic:
+        Value: /comparison/glim_path_in_super_world
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Depth: 1
+      Color: 255; 35; 255
+      Line Style: Lines
+      Line Width: 0.065
+      Buffer Length: 1
+    - Class: rviz_default_plugins/Path
+      Name: Super-LIO localization (green)
+      Enabled: true
+      Topic:
+        Value: /comparison/super_lio_path
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Depth: 1
+      Color: 25; 255; 60
+      Line Style: Lines
+      Line Width: 0.045
+      Buffer Length: 1
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Current poses and error
+      Enabled: true
+      Marker Topic:
+        Value: /comparison/markers
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Depth: 1
+    - Class: rviz_default_plugins/RobotModel
+      Name: G1 recorded joint motion
+      Enabled: true
+      Alpha: 1
+      Collision Enabled: false
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+        Reliability Policy: Reliable
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Depth: 1
+      TF Prefix: ""
+      Update Interval: 0
+      Visual Enabled: true
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 31
+      Pitch: 1.15
+      Yaw: 0.2
+      Focal Point:
+        X: -3.9
+        Y: -4.2
+        Z: 0
+Window Geometry:
+  Width: 1550
+  Height: 950

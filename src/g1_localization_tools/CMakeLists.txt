@@ -17,10 +17,13 @@ install(TARGETS pcd_xyzi_tool DESTINATION lib/${PROJECT_NAME})
 
 install(PROGRAMS
   bin/bag_audit
+  bin/g1_robot_visualizer
   bin/localization_evaluator
   bin/map_publisher
   bin/policy_odom_bridge
+  bin/quantitative_analysis
   bin/reference_visualizer
+  bin/trajectory_overlay
   DESTINATION lib/${PROJECT_NAME}
 )
 

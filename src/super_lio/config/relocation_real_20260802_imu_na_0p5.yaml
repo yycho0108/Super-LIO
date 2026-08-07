@@ -1,0 +1,58 @@
+/**:
+  ros__parameters:
+    # Dedicated A/B replay configuration. This is identical to
+    # relocation_real_20260802.yaml except for imu_na: 0.05 -> 0.5.
+    lio.map.save_map: false
+    lio.map.if_filter: true
+    lio.map.save_map_dir: "map_real_20260802"
+    lio.map.map_name: "dump7_xyzi_clean.pcd"
+    lio.map.ds_size: 0.25
+    lio.map.save_interval: -1
+
+    lio.ros.lidar_topic: "/livox/lidar"
+    lio.ros.imu_topic: "/livox/imu"
+
+    lio.sensor.lidar_type: 1
+    lio.sensor.blind: 0.6
+    lio.sensor.maxrange: 100.0
+    lio.sensor.filter_rate: 1
+    lio.sensor.enable_downsample: true
+    lio.sensor.voxel_fliter_size: 0.20
+    lio.sensor.gravity_norm: 9.81
+    lio.sensor.imu_type: 1
+    lio.sensor.imu_na: 0.5
+    lio.sensor.imu_ng: 0.02
+    lio.sensor.imu_nba: 0.00001
+    lio.sensor.imu_nbg: 0.00001
+
+    lio.extrinsic.lidar_imu: [-0.011, -0.02329, 0.04412,
+                              1.0, 0.0, 0.0,
+                              0.0, 1.0, 0.0,
+                              0.0, 0.0, 1.0]
+
+    lio.extrinsic.odom_robo: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    lio.hash_map.hash_capacity: 500000
+    lio.hash_map.vox_resolution: 0.25
+
+    lio.kf.kf_type: 0
+    lio.kf.kf_max_iterations: 4
+    lio.kf.kf_align_gravity: false
+    lio.kf.kf_quit_eps: 0.001
+
+    lio.submap.submap_resolution: 0.5
+    lio.submap.submap_capacity: 200000
+
+    lio.output.robot: false
+    lio.output.plan_env_world: false
+    lio.output.plan_env_body: false
+    lio.output.ml_map: false
+    lio.output.planner: false
+    lio.output.map: true
+    lio.output.dense: true
+    lio.output.pub_step: 1
+
+    lio.relocation.update_map: false
+    lio.relocation.init_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    lio.eva.timer: true

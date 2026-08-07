@@ -1,0 +1,259 @@
+{
+  "artifacts": {
+    "events_csv": "events.csv",
+    "latency_csv": "latency.csv",
+    "motion_bins_csv": "motion_bins.csv",
+    "timeseries_csv": "timeseries.csv"
+  },
+  "comparisons": {
+    "GLIM traj_imu": {
+      "event_counts": {
+        "orientation_jump": 0,
+        "position_error_episodes": 0,
+        "position_jump": 0
+      },
+      "motion_dependency": {
+        "acceleration_vs_error_pearson": 0.48887450157238577,
+        "acceleration_vs_error_spearman": 0.2483506878409936,
+        "speed_vs_error_pearson": 0.42303591619106606,
+        "speed_vs_error_spearman": 0.3124661856568167
+      },
+      "orientation_error_deg": {
+        "count": 622,
+        "max": 0.7698061640454575,
+        "mean": 0.05222238670602824,
+        "median": 0.0344175658494851,
+        "p95": 0.1409599097342733,
+        "p99": 0.2561315914312069,
+        "rmse": 0.08068025421803378
+      },
+      "position_error_m": {
+        "count": 622,
+        "max": 0.02902066447838327,
+        "mean": 0.0024931351596400447,
+        "median": 0.0019163526036020144,
+        "p95": 0.0057886480185501635,
+        "p99": 0.01226658347175983,
+        "rmse": 0.0035442876732736596
+      },
+      "position_jump_m_per_frame": {
+        "count": 621,
+        "max": 0.016757255641331008,
+        "mean": 0.0018766570012961846,
+        "median": 0.0015696234200859717,
+        "p95": 0.003954628702178802,
+        "p99": 0.0089685803071552,
+        "rmse": 0.002423868758087575
+      },
+      "velocity_residual_mps": {
+        "count": 622,
+        "max": 0.09259557383658848,
+        "mean": 0.01137191003349569,
+        "median": 0.008070479274727817,
+        "p95": 0.03005039518468468,
+        "p99": 0.06614176777647539,
+        "rmse": 0.01615569882263619
+      }
+    },
+    "Super-LIO": {
+      "event_counts": {
+        "orientation_jump": 1,
+        "position_error_episodes": 3,
+        "position_jump": 0
+      },
+      "motion_dependency": {
+        "acceleration_vs_error_pearson": 0.3576799527509743,
+        "acceleration_vs_error_spearman": 0.3584345684807972,
+        "speed_vs_error_pearson": 0.263721849726459,
+        "speed_vs_error_spearman": 0.3548557303310946
+      },
+      "orientation_error_deg": {
+        "count": 622,
+        "max": 10.049106267295054,
+        "mean": 0.3592583213650467,
+        "median": 0.29441697707099757,
+        "p95": 0.7123277308425688,
+        "p99": 1.2312302938319448,
+        "rmse": 0.5738466003228387
+      },
+      "position_error_m": {
+        "count": 622,
+        "max": 0.10632579406592017,
+        "mean": 0.011984319126427567,
+        "median": 0.008754114773931693,
+        "p95": 0.029310823063453284,
+        "p99": 0.08273242011346411,
+        "rmse": 0.01768953656967304
+      },
+      "position_jump_m_per_frame": {
+        "count": 621,
+        "max": 0.04939608104682382,
+        "mean": 0.0038661168263911154,
+        "median": 0.0030382715139837015,
+        "p95": 0.008280065805934406,
+        "p99": 0.01993752705050811,
+        "rmse": 0.0055338153031017695
+      },
+      "velocity_residual_mps": {
+        "count": 622,
+        "max": 0.41762310277325776,
+        "mean": 0.050046819271467466,
+        "median": 0.036114954837944385,
+        "p95": 0.1555855416016132,
+        "p99": 0.300242894352681,
+        "rmse": 0.07333383767465873
+      }
+    }
+  },
+  "data": {
+    "duration_sec": 20.7001369,
+    "filtered_replayed_lio_count": 869,
+    "imu_trajectory_path": "/home/dongjae/Downloads/glim_dump8/traj_imu.txt",
+    "imu_trajectory_pose_count": 971,
+    "localization_only_lio_count": 624,
+    "matched_pose_count": 622
+  },
+  "event_counts": {
+    "imu_orientation_jump": 0,
+    "imu_position_error_episodes": 0,
+    "imu_position_jump": 0,
+    "latency_spike": 18,
+    "latency_spike_startup": 18,
+    "latency_spike_steady_state": 0,
+    "orientation_jump": 1,
+    "position_error_episodes": 3,
+    "position_jump": 0
+  },
+  "fixed_transform_map_from_glim": [
+    [
+      -0.9814627129152631,
+      -0.19157111489091128,
+      0.0056081277147015905,
+      -4.095694861360624
+    ],
+    [
+      0.19141923216043757,
+      -0.9812902722262206,
+      -0.020690074753342884,
+      -1.2547082736107478
+    ],
+    [
+      0.009466821859513194,
+      -0.019233033396829607,
+      0.9997702084530405,
+      0.016658952179616188
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "latency_ms": {
+    "GLIM": {
+      "count": 971,
+      "max": 27.169362999999997,
+      "mean": 10.756155105046345,
+      "median": 8.740923,
+      "p95": 19.5711835,
+      "p99": 21.481253199999987,
+      "rmse": 11.875960495677047
+    },
+    "Super-LIO": {
+      "count": 624,
+      "max": 608.951031,
+      "mean": 12.995100155448716,
+      "median": 2.649,
+      "p95": 6.00758065,
+      "p99": 412.4159803099994,
+      "rmse": 64.3214131971492
+    },
+    "Super-LIO_steady_state": {
+      "count": 593,
+      "max": 13.913673,
+      "mean": 3.15603407925801,
+      "median": 2.603138,
+      "p95": 5.707470999999999,
+      "p99": 6.223900400000001,
+      "rmse": 3.471880877741404,
+      "start_sec": 1.0
+    }
+  },
+  "method": {
+    "glim_lidar_stamp_semantics": "scan start",
+    "ground_truth_assumption": "GLIM odom_corrected",
+    "imu_latency": "unavailable: trajectory text has no bag record timestamp",
+    "imu_trajectory_format": "timestamp x y z qx qy qz qw",
+    "latency_definition": "bag record time(output) - bag record time(matched LiDAR scan)",
+    "spatial_alignment": "one fixed map<-GLIM transform from one independent common sensor-time pose",
+    "super_lio_lidar_stamp_semantics": "scan end",
+    "time_alignment": "raw sensor timestamps for all trajectories; no fitted offset"
+  },
+  "motion_dependency": {
+    "acceleration_mps2": {
+      "count": 622,
+      "max": 8.160279638828454,
+      "mean": 1.837912442040802,
+      "median": 1.847048818690159,
+      "p95": 3.1652568795885165,
+      "p99": 6.942776273046216,
+      "rmse": 2.1729804500873886
+    },
+    "acceleration_vs_error_pearson": 0.3576799527509743,
+    "acceleration_vs_error_spearman": 0.3584345684807972,
+    "speed_mps": {
+      "count": 622,
+      "max": 1.5511835664932054,
+      "mean": 0.3001283379511789,
+      "median": 0.28172236253848837,
+      "p95": 0.6078550847269591,
+      "p99": 0.9929359515510727,
+      "rmse": 0.3584990961478951
+    },
+    "speed_vs_error_pearson": 0.263721849726459,
+    "speed_vs_error_spearman": 0.3548557303310946
+  },
+  "orientation_error_deg": {
+    "count": 622,
+    "max": 10.049106267295054,
+    "mean": 0.3592583213650467,
+    "median": 0.29441697707099757,
+    "p95": 0.7123277308425688,
+    "p99": 1.2312302938319448,
+    "rmse": 0.5738466003228387
+  },
+  "position_error_m": {
+    "count": 622,
+    "max": 0.10632579406592017,
+    "mean": 0.011984319126427567,
+    "median": 0.008754114773931693,
+    "p95": 0.029310823063453284,
+    "p99": 0.08273242011346411,
+    "rmse": 0.01768953656967304
+  },
+  "position_jump_m_per_frame": {
+    "count": 621,
+    "max": 0.04939608104682382,
+    "mean": 0.0038661168263911154,
+    "median": 0.0030382715139837015,
+    "p95": 0.008280065805934406,
+    "p99": 0.01993752705050811,
+    "rmse": 0.0055338153031017695
+  },
+  "thresholds": {
+    "latency_spike_ms": 50.0,
+    "orientation_jump_deg": 5.0,
+    "position_error_m": 0.05,
+    "position_jump_m": 0.05
+  },
+  "velocity_residual_mps": {
+    "count": 622,
+    "max": 0.41762310277325776,
+    "mean": 0.050046819271467466,
+    "median": 0.036114954837944385,
+    "p95": 0.1555855416016132,
+    "p99": 0.300242894352681,
+    "rmse": 0.07333383767465873
+  }
+}

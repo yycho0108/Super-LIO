@@ -17,6 +17,7 @@ fi
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="${PROJECT_DIR}/.venv"
+ROSBAG_ROOT="${LOCALIZATION_REPLAY_ROSBAG_ROOT:-/workspace/rosbag}"
 
 ROS_DISTRO_NAME="${ROS_DISTRO:-humble}"
 ROS_SETUP="${ROS_SETUP:-/opt/ros/${ROS_DISTRO_NAME}/setup.bash}"
@@ -43,5 +44,6 @@ fi
 
 exec "${VENV_DIR}/bin/python" "${PROJECT_DIR}/superlio_063004_app.py" \
   --run-id "${RUN_ID}" \
+  --data-root "${ROSBAG_ROOT}" \
   --port "${DEFAULT_PORT}" \
   "$@"

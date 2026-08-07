@@ -1,6 +1,8 @@
 # 2026-08-04 GLIM vs Super LIO replay
 
-네 개 실험에 같은 frame/URDF/error/Viser 로직을 사용하는 실행기입니다.
+아홉 개 실험에 같은 frame/URDF/Viser 로직을 사용하는 실행기입니다. 앞의 네 run은
+GLIM과 Super-LIO를 비교하고, 뒤의 다섯 run은 GLIM dump가 없으므로 Super-LIO만
+재생합니다.
 
 ## 새 컴퓨터에서 준비
 
@@ -27,11 +29,16 @@ cd /path/to/localization_replay
 ./run_superlio_063004.sh
 ./run_superlio_064152.sh
 ./run_superlio_064922.sh
+./run_superlio_080704.sh
+./run_superlio_081918.sh
+./run_superlio_084244.sh
+./run_superlio_084310.sh
+./run_superlio_084808.sh
 ```
 
 각 실행기는 서로 다른 기본 포트를 사용하므로 동시에 실행할 수도 있습니다.
 
-기본적으로 `$HOME/rosbag` 아래에서 원본 bag과 GLIM dump를 찾습니다. 다른 상위
+기본적으로 `/workspace/rosbag` 아래에서 원본 bag과 GLIM dump를 찾습니다. 다른 상위
 디렉터리에 있다면 다음처럼 지정합니다.
 
 ```bash
@@ -49,16 +56,60 @@ cd /path/to/localization_replay
 
 `traj_lidar.txt`는 `traj_imu.txt`와 같은 디렉터리에 있어야 합니다.
 
-| run | 원본 실험 bag | GLIM `traj_imu.txt` | port | 공통 sensor 구간 |
+| run | 원본 실험 bag | GLIM | port | sensor 구간 |
 |---|---|---|---:|---:|
 | 06:23:09 | `rosbag2_2026_08_04-06_23_09` | `glim_rosbag2_2026_08_04-06_23_09` | 8082 | 51.834 s |
 | 06:30:04 | `rosbag2_2026_08_04-06_30_04` | `glim_rosbag2_2026_08_04-06_30_04` | 8081 | 154.167 s |
 | 06:41:52 | `rosbag2_2026_08_04-06_41_52` | `glim_rosbag2_2026_08_04-06_41_52` | 8083 | 133.533 s |
 | 06:49:22 | `rosbag2_2026_08_04-06_49_22` | `glim_rosbag2_2026_08_04-06_49_22` | 8084 | 52.967 s |
+| 08:07:04 | `rosbag2_2026_08_04-08_07_04` | 없음 (Super-LIO only) | 8085 | 339.333 s |
+| 08:19:18 | `rosbag2_2026_08_04-08_19_18` | 없음 (Super-LIO only) | 8086 | 66.066 s |
+| 08:42:44 | `rosbag2_2026_08_04-08_42_44` | 없음 (Super-LIO only) | 8087 | 10.000 s |
+| 08:43:10 | `rosbag2_2026_08_04-08_43_10` | 없음 (Super-LIO only) | 8088 | 106.396 s |
+| 08:48:08 | `rosbag2_2026_08_04-08_48_08` | 없음 (Super-LIO only) | 8089 | 39.466 s |
+
+새 다섯 실행기는 내부적으로 `--superlio-only`를 넘깁니다. 이 모드에서는 선택한
+원본 bag의 `/lio/odom`, `/lowstate`, TF, `/augmented_map`만 사용하며 GLIM 파일,
+`T_MAP_GLIM` 정렬 및 두 estimator 간 error graph는 만들지 않습니다.
+
+## `imu_na=0.5` A/B 재처리
+
+앞의 네 실험은 아래 명령으로 같은 원본 sensor bag을 Super-LIO relocation에 다시
+입력할 수 있습니다. 스크립트가 ROS 2 Humble/workspace setup, CycloneDDS loopback,
+전용 `ROS_DOMAIN_ID=42`, bag play/record와 종료 후 topic 검증까지 수행합니다.
+
+```bash
+cd /home/dongjae/ws/src/Super-LIO/localization_replay
+./record_superlio_imu_na_0p5.sh 062309
+./record_superlio_imu_na_0p5.sh 063004
+./record_superlio_imu_na_0p5.sh 064152
+./record_superlio_imu_na_0p5.sh 064922
+# 또는 네 개 순차 실행(동일 이름의 출력이 이미 있으면 안전하게 중단)
+./record_all_superlio_imu_na_0p5.sh
+```
+
+전용 설정은
+`src/super_lio/config/relocation_real_20260802_imu_na_0p5.yaml`이며 기존 설정과
+`lio.sensor.imu_na: 0.05 -> 0.5`만 다릅니다. 출력은
+`/workspace/rosbag/superlio_imu_na_0p5_<RUN_ID>`입니다. 이 clean bag에는 새로 계산한
+`/lio/odom`만 저장합니다. Viser는 비교 시 같은 run의 원본 bag에서 `/lowstate`, TF,
+`/augmented_map`을 읽으므로 데이터가 중복되거나 원본 `/lio/odom`이 새 결과에 섞이지
+않습니다.
+
+```bash
+./run_superlio_062309_imu_na_0p5.sh  # port 8092
+./run_superlio_063004_imu_na_0p5.sh  # port 8093
+./run_superlio_064152_imu_na_0p5.sh  # port 8094
+./run_superlio_064922_imu_na_0p5.sh  # port 8095
+```
+
+각 Viser 실행은 새 `/lio/odom`과 기존의 동일 GLIM dump를 비교하고, 기존 실행기와
+같은 고정 `T_MAP_GLIM`, robot FK, augmented map, plot 및 키보드 frame stepping을
+사용합니다.
 
 ## 실제 사용 데이터
 
-네 원본 실험 bag에 실제 주행 당시 Super-LIO `/lio/odom`이 이미 기록되어 있습니다.
+원본 실험 bag에 실제 주행 당시 Super-LIO `/lio/odom`이 이미 기록되어 있습니다.
 따라서 기본 비교는 다음 IMU pose 두 개입니다.
 
 - Super LIO: 원본 실험 bag의 recorded live `/lio/odom` `header.stamp`
@@ -129,9 +180,11 @@ T_MAP_IMU(t) = T_MAP_GLIM · T_GLIM_IMU(traj_imu.txt, t)
 - live ROS `/augmented_map` overlay
 - 실제 29-DoF G1 URDF와 `/lowstate`를 사용한 robot FK
 - 모든 point cloud 기본 크기 `0.01`; UI slider 변경값은 timestamp 이동 후에도 유지
-- grid/scene origin은 초기 GLIM robot 발밑, 초기 camera target은 그 위 robot 중심
+- grid/scene origin은 초기 기준 robot 발밑(GLIM 비교 모드는 GLIM, Super-LIO-only
+  모드는 Super-LIO), 초기 camera target은 그 위 robot 중심
 - `Space`: play/pause toggle
-- `←` / `→`: 재생을 멈추고 정확한 이전/다음 `/lio/odom.header.stamp` frame으로 이동
+- `,` / `.`: 재생을 멈추고 정확한 이전/다음 `/lio/odom.header.stamp` frame으로 이동
+- `[` / `]`, `←` / `→`도 동일하게 지원하며 capture 단계에서 Viser camera 입력을 차단
 - Playback 폴더의 `Previous frame` / `Next frame` 버튼으로도 동일한 frame stepping
 
 키보드 단축키는 3D 화면이나 빈 영역에 focus가 있을 때 동작합니다. 숫자 입력창을
