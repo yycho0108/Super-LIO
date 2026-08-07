@@ -1600,11 +1600,13 @@ class DualReplayApp:
         self.current_position_error = None
         self.current_position_component_errors = []
         self.current_orientation_error = None
+        self.error_time_slider = None
         if self.dual_mode:
             with gui.add_folder("Same-timestamp error", expand_by_default=True):
                 gui.add_markdown(
-                    "상단 slider 또는 키보드 `,`/`.` (`[`/`]`)로 시간을 "
-                    "이동합니다. 축 오차는 `Super LIO − GLIM`의 signed 값입니다."
+                    "아래 graph timeline 또는 키보드 `,`/`.` (`[`/`]`)로 "
+                    "시간을 이동합니다. 축 오차는 `Super LIO − GLIM`의 "
+                    "signed 값입니다."
                 )
                 if self.args.post_recovery_align_steps > 0:
                     gui.add_markdown(
@@ -1627,6 +1629,20 @@ class DualReplayApp:
                     "orientation error [deg]", 0.0, step=0.001, disabled=True
                 )
                 if not self.args.no_plots:
+                    self.error_time_slider = gui.add_slider(
+                        "graph timeline [s]",
+                        min=0.0,
+                        max=self.max_elapsed,
+                        step=0.001,
+                        initial_value=0.0,
+                        marks=(
+                            (0.0, "0"),
+                            (
+                                round(self.max_elapsed, 3),
+                                f"{self.max_elapsed:.1f}s",
+                            ),
+                        ),
+                    )
                     self.error_figure = error_figure(
                         self.error_elapsed,
                         self.position_errors,
@@ -1669,7 +1685,21 @@ class DualReplayApp:
 
         @self.time_slider.on_update
         def _(_) -> None:
-            self.update_state(float(self.time_slider.value))
+            elapsed = float(self.time_slider.value)
+            if (
+                self.error_time_slider is not None
+                and abs(float(self.error_time_slider.value) - elapsed) > 1.0e-9
+            ):
+                self.error_time_slider.value = elapsed
+            self.update_state(elapsed)
+
+        if self.error_time_slider is not None:
+            @self.error_time_slider.on_update
+            def _(_) -> None:
+                elapsed = float(self.error_time_slider.value)
+                if abs(float(self.time_slider.value) - elapsed) > 1.0e-9:
+                    self.time_slider.value = elapsed
+                self.update_state(elapsed)
 
         @self.play_button.on_click
         def _(_) -> None:
@@ -1986,6 +2016,13 @@ class DualReplayApp:
     def update_state(self, elapsed: float, force_plots: bool = False) -> None:
         with self.lock:
             elapsed = float(np.clip(elapsed, 0.0, self.max_elapsed))
+            if (
+                self.error_time_slider is not None
+                and abs(float(self.error_time_slider.value) - elapsed) > 1.0e-9
+            ):
+                # Keep the graph-adjacent timeline moving during playback and
+                # keyboard frame stepping as well as direct slider dragging.
+                self.error_time_slider.value = elapsed
             sensor_timestamp = self.common_start + elapsed
             record_timestamp = float(
                 self.bag.record_time_from_sensor_time(
