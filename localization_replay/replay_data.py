@@ -398,6 +398,49 @@ def remove_trajectory_pose_matches(
     return removed
 
 
+def remove_odometry_pose_matches(
+    series: OdometrySeries,
+    reference: OdometrySeries,
+    position_tolerance_m: float = 1.0e-5,
+    orientation_tolerance_deg: float = 0.01,
+) -> tuple[OdometrySeries, int]:
+    """Return odometry with exact replayed reference poses removed."""
+    distances, indices = cKDTree(reference.positions).query(
+        series.positions, k=1
+    )
+    quaternions = series.quaternions_xyzw.copy()
+    quaternions /= np.maximum(
+        np.linalg.norm(quaternions, axis=1, keepdims=True), 1.0e-12
+    )
+    reference_quaternions = reference.quaternions_xyzw[indices].copy()
+    reference_quaternions /= np.maximum(
+        np.linalg.norm(reference_quaternions, axis=1, keepdims=True), 1.0e-12
+    )
+    dots = np.abs(np.einsum("ij,ij->i", quaternions, reference_quaternions))
+    orientation_degrees = np.rad2deg(
+        2.0 * np.arccos(np.clip(dots, 0.0, 1.0))
+    )
+    replayed = (
+        (distances <= position_tolerance_m)
+        & (orientation_degrees <= orientation_tolerance_deg)
+    )
+    keep = ~replayed
+    removed = int(np.count_nonzero(replayed))
+    if np.count_nonzero(keep) < 2:
+        raise RuntimeError(
+            "Filtering replayed odometry left fewer than two poses"
+        )
+    return (
+        OdometrySeries(
+            times=series.times[keep],
+            header_times=series.header_times[keep],
+            positions=series.positions[keep],
+            quaternions_xyzw=series.quaternions_xyzw[keep],
+        ),
+        removed,
+    )
+
+
 def _find_db3(bag_path: Path) -> Path:
     if bag_path.is_file() and bag_path.suffix == ".db3":
         return bag_path

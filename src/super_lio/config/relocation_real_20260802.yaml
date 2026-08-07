@@ -35,8 +35,8 @@
     #lio.sensor.imu_na: 0.0025
     lio.sensor.imu_ng: 0.02
     #lio.sensor.imu_ng: 0.0004
-    lio.sensor.imu_nba: 0.01
-    lio.sensor.imu_nbg: 0.01
+    lio.sensor.imu_nba: 0.00001
+    lio.sensor.imu_nbg: 0.00001
 
     # dump6 records T_lidar_imu (IMU pose in LiDAR coordinates) as
     # [0.011, 0.02329, -0.04412] with identity rotation. The bag's TF
@@ -53,12 +53,20 @@
 
     # dump6 has 13,467 points.
     lio.hash_map.hash_capacity: 500000
-    lio.hash_map.vox_resolution: 0.25
+    #lio.hash_map.vox_resolution: 0.25
+    lio.hash_map.vox_resolution: 0.10
 
-    lio.kf.kf_type: 1
-    lio.kf.kf_max_iterations: 64
+    lio.kf.kf_type: 0
+    lio.kf.kf_max_iterations: 16
+    lio.kf.kf_rematch_iterations: 4
     lio.kf.kf_align_gravity: false
     lio.kf.kf_quit_eps: 0.00001
+
+    lio.match.plane_fit_dist_thresh: 0.10
+    lio.match.residual_gate_scale: 81.0
+    lio.match.point_plane_weight: 5000.0   
+    lio.match.min_plane_points: 4
+    lio.match.rolling_window_size: 0
 
     lio.submap.submap_resolution: 0.5
     lio.submap.submap_capacity: 200000

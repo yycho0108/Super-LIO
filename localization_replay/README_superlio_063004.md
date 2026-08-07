@@ -2,6 +2,25 @@
 
 모든 실험에 같은 frame/URDF/Viser 로직을 사용하는 실행기입니다.
 
+## Super-LIO 설정을 rosbag과 함께 저장
+
+Super-LIO launch를 먼저 실행한 뒤, 기존 `ros2 bag record` 대신 다음 wrapper를
+실행합니다. record 시작 직전의 config가 bag 디렉터리 안
+`super_lio_config_snapshot.yaml`로 저장됩니다.
+
+```bash
+cd ~/ws/src/Super-LIO/localization_replay
+./record_superlio_with_config.sh \
+  /workspace/rosbag/superlio_2026_08_06-07_23_29_v4
+```
+
+기본 config가 아닌 파일을 launch에 전달했다면 같은 경로를 두 번째 인자로
+전달합니다.
+
+```bash
+./record_superlio_with_config.sh OUTPUT_BAG CONFIG_YAML
+```
+
 ## 새 rosbag 공통 실행
 
 bag별 실행 스크립트를 새로 만들 필요 없이 원본 bag 경로만 전달합니다. 별도 topic
@@ -14,13 +33,22 @@ cd ~/ws/src/Super-LIO/localization_replay
   /workspace/rosbag/rosbag2_2026_08_06-07_23_29
 ```
 
-같은 디렉터리의 같은 날짜/시간 `glim_rosbag2_*`에서 `traj_imu.txt`와
-`traj_lidar.txt`를 자동 탐색합니다. GLIM pair가 없으면 Super-LIO-only 모드로
-자동 실행됩니다. 자동 탐색이 불가능한 위치라면 두 번째 인자로 GLIM 디렉터리
-또는 `traj_imu.txt`를 지정합니다.
+같은 디렉터리의 같은 날짜/시간 `glim_rosbag2_*`에서 `traj_imu.txt`를 자동
+탐색합니다. 파일이 없으면 Super-LIO-only 모드로 자동 실행됩니다. 자동 탐색이
+불가능한 위치라면 두 번째 인자로 GLIM 디렉터리 또는 `traj_imu.txt`를 지정합니다.
 
 ```bash
 ./run_localization_replay.sh ROSBAG_PATH GLIM_PATH --port 8090
+```
+
+파라미터를 바꿔 재처리한 versioned bag도 그대로 첫 번째 인자로 전달한다.
+`/lio/odom`, `/augmented_map`, `/lio/cloud_world`, LowState와 TF는 지정한
+version bag에서 읽습니다. GLIM frame anchor도 그 version의 `/lio/odom(t0)`과
+`traj_imu.txt(t0)`로 직접 계산합니다.
+
+```bash
+./run_localization_replay.sh \
+  /workspace/rosbag/superlio_2026_08_06-07_32_44_v1
 ```
 
 ## 새 컴퓨터에서 준비
@@ -72,8 +100,6 @@ cd /path/to/localization_replay
   --source-bag /path/to/original-bag \
   --glim-trajectory /path/to/traj_imu.txt
 ```
-
-`traj_lidar.txt`는 `traj_imu.txt`와 같은 디렉터리에 있어야 합니다.
 
 | run | 원본 실험 bag | GLIM | port | sensor 구간 |
 |---|---|---|---:|---:|
@@ -133,8 +159,8 @@ cd /home/dongjae/ws/src/Super-LIO/localization_replay
 
 - Super LIO: 원본 실험 bag의 recorded live `/lio/odom` `header.stamp`
 - GLIM: 같은 run의 GLIM dump `traj_imu.txt`
-- GLIM→map frame anchor: 원본 bag의 `/odometry/odom`과 같은 dump의
-  `traj_lidar.txt`
+- GLIM→map frame anchor: 선택한 bag의 `/lio/odom(t0)`과 같은 dump의
+  `traj_imu.txt(t0)`
 
 `superlio_062309/063004/064152/064922`는 나중 offline replay 때 만든 재기록
 bag입니다. 여기에는 원본 `/lio/odom`과 새 재실행 출력이 같은 topic으로 섞여
@@ -160,28 +186,21 @@ bag 경과시간이 아니라 두 결과의 절대 sensor timestamp를 사용합
 pose timestamp 각각에서 Super LIO를 보간해 position 및 SO(3) orientation error를
 계산합니다.
 
-공간 정렬은 각 run의 원본 bag과 GLIM dump가 처음 함께 존재하는 sensor timestamp
-하나에서 아래 고정 SE(3)를 계산합니다.
+공간 정렬은 선택한 Super-LIO bag과 GLIM dump가 처음 함께 존재하는 sensor
+timestamp 하나에서 아래 고정 SE(3)를 계산합니다.
 
 ```text
-T_MAP_GLIM = T_MAP_LIDAR(/odometry/odom, t_cal)
-             · inverse(T_GLIM_LIDAR(traj_lidar.txt, t_cal))
+T_MAP_GLIM = T_MAP_IMU(/lio/odom, t0)
+             · inverse(T_GLIM_IMU(traj_imu.txt, t0))
 T_MAP_IMU(t) = T_MAP_GLIM · T_GLIM_IMU(traj_imu.txt, t)
 ```
 
-원본 `/odometry/odom`은 timestamp가 같은 `/lio/odom`에 고정
-`T_IMU_LIDAR=(-0.011,-0.02329,+0.04412)`를 곱한 stream입니다. 따라서 이 변환은
-독립 측량 calibration이 아니라 첫 pose를 같게 두는 **고정 start-frame anchor**입니다.
-즉 초기 절대 localization bias는 평가하지 않고, 이후 두 궤적의 상대적인 불일치를
-평가합니다. trajectory 전체 fitting이나 시각별 정합은 하지 않으며 모든 pose에 같은
-행렬 하나만 적용합니다.
-
-| run | translation xyz [m] | RPY [deg] |
-|---|---|---|
-| 06:23:09 | (-4.0864, -1.5918, -0.0549) | (-0.774, -0.112, -160.843) |
-| 06:30:04 | (-3.9982, -1.9055, -0.0329) | (-0.908, -1.045, 146.518) |
-| 06:41:52 | (-3.6020, -1.8734, -0.0270) | (0.331, -1.333, 107.966) |
-| 06:49:22 | (-3.1859, -2.2146, -0.7111) | (-14.716, 5.927, 44.999) |
+LiDAR pose, `traj_lidar.txt`, `/odometry/odom`은 사용하지 않습니다. 이 변환은 각
+선택 bag의 첫 IMU pose를 GLIM의 첫 IMU pose와 같게 두는 **고정 start-frame
+anchor**입니다. 따라서 초기 절대 localization bias는 평가하지 않고 이후 두 궤적의
+상대적인 불일치를 평가합니다. trajectory 전체 fitting이나 시각별 정합은 하지 않으며
+모든 GLIM pose에 같은 행렬 하나만 적용합니다. 같은 실험의 v1/v2라도 각자의
+`/lio/odom(t0)`이 다르면 서로 다른 `T_MAP_GLIM`을 얻습니다.
 
 정확한 4×4 행렬은 dry-run 출력과 Viser의 `Fixed start-frame anchor`
 폴더에서 확인할 수 있습니다. 원본 GLIM 좌표를 보려면 `--no-spatial-align`을
