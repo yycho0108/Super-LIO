@@ -525,8 +525,10 @@ void SuperLIO::DownSample(){
   voxel_grid_fliter_.setInputCloud(scan_undistort_full_);
   voxel_grid_fliter_.filter(ds_current_);
 
-  voxel_grid_fliter_.setInputCloud(rolling_undistort_);
-  voxel_grid_fliter_.filter(ds_undistort_);
+  if (g_match_rolling_window_size > 0){
+	  voxel_grid_fliter_.setInputCloud(rolling_undistort_);
+	  voxel_grid_fliter_.filter(ds_undistort_);
+  }
 }
 
 
@@ -535,7 +537,10 @@ void SuperLIO::BuildRollingWindowCloud(){
   if(scan_undistort_full_->empty()){
     return;
   }
-
+  if (g_match_rolling_window_size <= 0){
+    return;
+  }
+ 
   std::size_t reserve_size = scan_undistort_full_->size();
   for(const auto& scan : rolling_scan_window_){
     if(scan.cloud){
@@ -580,9 +585,12 @@ void SuperLIO::PushCurrentScanToRollingWindow(){
   scan.cloud.reset(new PointCloudType(*scan_undistort_full_));
   scan.pose = kf_->GetSE3();
   scan.end_time = measures_.lidar.end_time;
-  rolling_scan_window_.push_back(scan);
-  while(rolling_scan_window_.size() > g_match_rolling_window_size){
-    rolling_scan_window_.pop_front();
+
+  if (g_match_rolling_window_size > 0){
+	  rolling_scan_window_.push_back(scan);
+	  while(rolling_scan_window_.size() > g_match_rolling_window_size){
+	    rolling_scan_window_.pop_front();
+	  }
   }
 }
 
@@ -595,7 +603,8 @@ struct ThreadACC{
 
 
 void SuperLIO::Observe(){
-  const auto& observe_cloud = ds_undistort_;
+  const auto& observe_cloud = (g_match_rolling_window_size > 0)? ds_undistort_ : ds_current_ ;
+
   const size_t max_effect_points = sizeof(effect_mask_) / sizeof(effect_mask_[0]);
   size_t ptsize = std::min(observe_cloud->size(), max_effect_points);
   
