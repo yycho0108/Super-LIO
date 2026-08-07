@@ -1,0 +1,27 @@
+algorithm,type,start_sec,end_sec,value,unit
+Super-LIO,latency_spike,0.0,0.0,608.951031,ms
+Super-LIO vs GLIM odom_corrected,position_error_episode,0.0,0.0,0.06368366184098896,m
+Super-LIO vs GLIM traj_imu,position_error_episode,0.0,0.0,0.06422110853424152,m
+Super-LIO,latency_spike,0.035598993,0.035598993,576.461326,ms
+Super-LIO vs GLIM odom_corrected,orientation_jump,0.035598993,0.035598993,8.781043701733505,deg/frame
+Super-LIO vs GLIM traj_imu,orientation_jump,0.035598993,0.035598993,8.76590779619524,deg/frame
+Super-LIO,latency_spike,0.069942712,0.069942712,544.255392,ms
+Super-LIO,latency_spike,0.099764347,0.099764347,513.5152919999999,ms
+Super-LIO,latency_spike,0.13571977600000001,0.13571977600000001,482.173323,ms
+Super-LIO,latency_spike,0.16985178,0.16985178,449.90108599999996,ms
+Super-LIO,latency_spike,0.20000123900000003,0.20000123900000003,419.62634299999996,ms
+Super-LIO,latency_spike,0.23562407500000002,0.23562407500000002,388.27693999999997,ms
+Super-LIO,latency_spike,0.26969790400000004,0.26969790400000004,356.535235,ms
+Super-LIO,latency_spike,0.299888849,0.299888849,326.02270999999996,ms
+Super-LIO,latency_spike,0.335610151,0.335610151,294.254736,ms
+Super-LIO,latency_spike,0.369954824,0.369954824,262.599691,ms
+Super-LIO,latency_spike,0.400165557,0.400165557,231.86881,ms
+Super-LIO,latency_spike,0.435765981,0.435765981,201.076415,ms
+Super-LIO,latency_spike,0.469937086,0.469937086,168.291505,ms
+Super-LIO,latency_spike,0.499651909,0.499651909,137.533628,ms
+Super-LIO,latency_spike,0.535727739,0.535727739,106.337261,ms
+Super-LIO,latency_spike,0.570120096,0.570120096,75.813632,ms
+Super-LIO vs GLIM odom_corrected,position_error_episode,8.899786472,9.035718441,0.06492564957075929,m
+Super-LIO vs GLIM traj_imu,position_error_episode,8.899786472,9.035718441,0.06605171153627036,m
+Super-LIO vs GLIM traj_imu,position_error_episode,16.569913864,16.935854196,0.11367723834399185,m
+Super-LIO vs GLIM odom_corrected,position_error_episode,16.600010156,16.935854196,0.10632579406592017,m

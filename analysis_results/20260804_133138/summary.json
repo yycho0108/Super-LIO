@@ -1,0 +1,152 @@
+{
+  "artifacts": {
+    "events_csv": "events.csv",
+    "latency_csv": "latency.csv",
+    "motion_bins_csv": "motion_bins.csv",
+    "timeseries_csv": "timeseries.csv"
+  },
+  "data": {
+    "duration_sec": 20.735795736,
+    "filtered_replayed_lio_count": 869,
+    "localization_only_lio_count": 624,
+    "matched_pose_count": 623
+  },
+  "event_counts": {
+    "latency_spike": 18,
+    "latency_spike_startup": 18,
+    "latency_spike_steady_state": 0,
+    "orientation_jump": 1,
+    "position_error_episodes": 3,
+    "position_jump": 0
+  },
+  "fixed_transform_map_from_glim": [
+    [
+      -0.9814627129152631,
+      -0.19157111489091128,
+      0.0056081277147015905,
+      -4.095694861360624
+    ],
+    [
+      0.19141923216043757,
+      -0.9812902722262206,
+      -0.020690074753342884,
+      -1.2547082736107478
+    ],
+    [
+      0.009466821859513194,
+      -0.019233033396829607,
+      0.9997702084530405,
+      0.016658952179616188
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "latency_ms": {
+    "GLIM": {
+      "count": 971,
+      "max": 27.169362999999997,
+      "mean": 10.756155105046345,
+      "median": 8.740923,
+      "p95": 19.5711835,
+      "p99": 21.481253199999987,
+      "rmse": 11.875960495677047
+    },
+    "Super-LIO": {
+      "count": 624,
+      "max": 608.951031,
+      "mean": 12.995100155448716,
+      "median": 2.649,
+      "p95": 6.00758065,
+      "p99": 412.4159803099994,
+      "rmse": 64.3214131971492
+    },
+    "Super-LIO_steady_state": {
+      "count": 593,
+      "max": 13.913673,
+      "mean": 3.15603407925801,
+      "median": 2.603138,
+      "p95": 5.707470999999999,
+      "p99": 6.223900400000001,
+      "rmse": 3.471880877741404,
+      "start_sec": 1.0
+    }
+  },
+  "method": {
+    "glim_lidar_stamp_semantics": "scan start",
+    "ground_truth_assumption": "GLIM odom_corrected",
+    "latency_definition": "bag record time(output) - bag record time(matched LiDAR scan)",
+    "spatial_alignment": "one fixed map<-GLIM transform from one independent common sensor-time pose",
+    "super_lio_lidar_stamp_semantics": "scan end",
+    "time_alignment": "raw sensor header timestamps; no fitted offset"
+  },
+  "motion_dependency": {
+    "acceleration_mps2": {
+      "count": 623,
+      "max": 8.160279638828454,
+      "mean": 1.836306512392936,
+      "median": 1.8425294606682683,
+      "p95": 3.164758608092101,
+      "p99": 6.939365694187468,
+      "rmse": 2.171349443778731
+    },
+    "acceleration_vs_error_pearson": 0.3581634323810343,
+    "acceleration_vs_error_spearman": 0.3604535751108966,
+    "speed_mps": {
+      "count": 623,
+      "max": 1.5511835664932054,
+      "mean": 0.29973321766244765,
+      "median": 0.2815209704520694,
+      "p95": 0.6078023416709206,
+      "p99": 0.9927665900074468,
+      "rmse": 0.35821962411828207
+    },
+    "speed_vs_error_pearson": 0.2643712988297434,
+    "speed_vs_error_spearman": 0.3565558190860767
+  },
+  "orientation_error_deg": {
+    "count": 623,
+    "max": 10.049106267295054,
+    "mean": 0.35895299206930864,
+    "median": 0.2944074872312457,
+    "p95": 0.7099346920771442,
+    "p99": 1.2307523075123847,
+    "rmse": 0.5734258578173514
+  },
+  "position_error_m": {
+    "count": 623,
+    "max": 0.10632579406592017,
+    "mean": 0.011973483715539338,
+    "median": 0.008749151913136757,
+    "p95": 0.029308416246010133,
+    "p99": 0.08264521790755218,
+    "rmse": 0.01767657758641641
+  },
+  "position_jump_m_per_frame": {
+    "count": 622,
+    "max": 0.04939608104682382,
+    "mean": 0.0038616891498302183,
+    "median": 0.003037421123430302,
+    "p95": 0.008277380179202072,
+    "p99": 0.01992576538905387,
+    "rmse": 0.0055295449078311
+  },
+  "thresholds": {
+    "latency_spike_ms": 50.0,
+    "orientation_jump_deg": 5.0,
+    "position_error_m": 0.05,
+    "position_jump_m": 0.05
+  },
+  "velocity_residual_mps": {
+    "count": 623,
+    "max": 0.41762310277325776,
+    "mean": 0.049999517935334345,
+    "median": 0.03609148593833159,
+    "p95": 0.15545376197853933,
+    "p99": 0.30017392171572893,
+    "rmse": 0.07327832497624397
+  }
+}
