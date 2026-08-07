@@ -26,15 +26,57 @@ def load_xyzi_pcd(path):
         if header['DATA'][0].lower() != 'binary':
             raise RuntimeError('Map publisher requires binary PCD')
         fields = header['FIELDS']
-        if fields != ['x', 'y', 'z', 'intensity']:
-            raise RuntimeError(f'Expected XYZI fields, got {fields}')
-        if header['SIZE'] != ['4', '4', '4', '4'] or header['TYPE'] != ['F'] * 4:
-            raise RuntimeError('Expected four float32 XYZI fields')
+        sizes = [int(value) for value in header['SIZE']]
+        types = header['TYPE']
+        counts = [int(value) for value in header.get(
+            'COUNT', ['1'] * len(fields))]
+        if not (len(fields) == len(sizes) == len(types) == len(counts)):
+            raise RuntimeError('PCD field metadata lengths do not match')
+        offsets = []
+        point_step = 0
+        for size, count in zip(sizes, counts):
+            offsets.append(point_step)
+            point_step += size * count
+        for required in ('x', 'y', 'z'):
+            if required not in fields:
+                raise RuntimeError(f'PCD is missing required field: {required}')
+            index = fields.index(required)
+            if sizes[index] != 4 or types[index] != 'F' or counts[index] != 1:
+                raise RuntimeError(
+                    f'PCD field {required} must be scalar float32')
         points = int(header['POINTS'][0])
-        payload = stream.read(points * 16)
-        if len(payload) != points * 16:
+        source_payload = stream.read(points * point_step)
+        if len(source_payload) != points * point_step:
             raise RuntimeError('PCD payload is shorter than its header')
-    return points, payload
+
+    # RViz only needs XYZ and optional intensity. Repack maps that also carry
+    # normals, RGB, or other fields into a compact XYZI PointCloud2 payload.
+    xyz_offsets = [offsets[fields.index(name)] for name in ('x', 'y', 'z')]
+    intensity_offset = None
+    if 'intensity' in fields:
+        index = fields.index('intensity')
+        if sizes[index] == 4 and types[index] == 'F' and counts[index] == 1:
+            intensity_offset = offsets[index]
+
+    if (fields == ['x', 'y', 'z', 'intensity'] and
+            sizes == [4, 4, 4, 4] and types == ['F'] * 4 and
+            counts == [1, 1, 1, 1]):
+        return points, source_payload
+
+    output = bytearray(points * 16)
+    unpack_float = struct.Struct('<f')
+    pack_xyzi = struct.Struct('<ffff')
+    for row in range(points):
+        base = row * point_step
+        x, y, z = [
+            unpack_float.unpack_from(source_payload, base + offset)[0]
+            for offset in xyz_offsets
+        ]
+        intensity = (unpack_float.unpack_from(
+            source_payload, base + intensity_offset)[0]
+                     if intensity_offset is not None else 0.0)
+        pack_xyzi.pack_into(output, row * 16, x, y, z, intensity)
+    return points, bytes(output)
 
 
 class MapPublisher(Node):

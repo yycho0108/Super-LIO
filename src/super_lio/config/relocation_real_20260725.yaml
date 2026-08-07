@@ -23,8 +23,10 @@
     lio.sensor.gravity_norm: 9.81
     lio.sensor.imu_type: 1
     # Values recorded in dump6/config/config_sensors.json.
-    lio.sensor.imu_na: 0.05
-    lio.sensor.imu_ng: 0.02
+    #lio.sensor.imu_na: 0.05
+    lio.sensor.imu_na: 0.0025
+    #lio.sensor.imu_ng: 0.02
+    lio.sensor.imu_ng: 0.0004
     lio.sensor.imu_nba: 0.00001
     lio.sensor.imu_nbg: 0.00001
 

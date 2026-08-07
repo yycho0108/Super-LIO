@@ -8,3 +8,4 @@ install
 .catkin_tools
 src/CMakeLists.txt
 __pycache__
+localization_replay/.venv/

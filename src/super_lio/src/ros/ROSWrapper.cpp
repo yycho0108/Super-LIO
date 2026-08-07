@@ -2,6 +2,9 @@
 #include "ros/ROSWrapper.h"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 
+#include <algorithm>
+#include <cstdint>
+
 
 using namespace BASIC;
 
@@ -292,11 +295,16 @@ void ROSWrapper::setupIO(){
   rclcpp::SubscriptionOptions sub_opt;
   sub_opt.callback_group = cb_sensor_;
 
-  auto imu_qos = rclcpp::QoS(rclcpp::KeepLast(500))
+  const auto imu_qos_depth = static_cast<std::size_t>(std::max<std::int64_t>(
+      1, this->declare_parameter<std::int64_t>("lio.ros.imu_qos_depth", 500)));
+  const auto lidar_qos_depth = static_cast<std::size_t>(std::max<std::int64_t>(
+      1, this->declare_parameter<std::int64_t>("lio.ros.lidar_qos_depth", 20)));
+
+  auto imu_qos = rclcpp::QoS(rclcpp::KeepLast(imu_qos_depth))
                  .best_effort()
                  .durability_volatile();
 
-  auto lidar_qos = rclcpp::QoS(rclcpp::KeepLast(20))
+  auto lidar_qos = rclcpp::QoS(rclcpp::KeepLast(lidar_qos_depth))
                    .best_effort()
                    .durability_volatile();
 
