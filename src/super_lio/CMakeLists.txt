@@ -88,6 +88,12 @@ target_link_libraries(relocation_node
   ${cpp_typesupport_target}
 )
 
+add_executable(super_lio_reloc_step_replay src/apps/super_lio_reloc_step_replay.cpp)
+target_link_libraries(super_lio_reloc_step_replay
+  lio
+  ${cpp_typesupport_target}
+)
+
 install(TARGETS
   lio
   ARCHIVE DESTINATION lib
@@ -101,6 +107,7 @@ install(TARGETS
 
 install(TARGETS
   relocation_node
+  super_lio_reloc_step_replay
   DESTINATION lib/${PROJECT_NAME}
 )
 

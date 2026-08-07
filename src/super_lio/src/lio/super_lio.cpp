@@ -7,6 +7,8 @@
 #include <tbb/concurrent_vector.h>
 #include <tbb/enumerable_thread_specific.h>
 
+#include <filesystem>
+#include <sstream>
 
 using namespace BASIC;
 
@@ -113,7 +115,48 @@ void SuperLIO::process(){
   if(!data_wrapper_->sync_measure(measures_)){
     return;
   }
+  debug_step_iteration_++;
+  MaybeExportDebugStep();
   (this->*state_fn_)();
+}
+
+
+void SuperLIO::MaybeExportDebugStep(){
+  if(debug_step_exported_ || g_debug_export_dir.empty()){
+    return;
+  }
+
+  const bool iteration_match =
+      g_debug_export_iteration >= 0 &&
+      debug_step_iteration_ == g_debug_export_iteration;
+  const bool time_match =
+      g_debug_export_time >= 0.0 &&
+      measures_.lidar.start_time <= g_debug_export_time &&
+      g_debug_export_time <= measures_.lidar.end_time;
+  if(!iteration_match && !time_match){
+    return;
+  }
+
+  StepDebugSnapshot snapshot;
+  snapshot.measures = measures_;
+  snapshot.state = kf_->GetSysState();
+  snapshot.gravity = kf_->GetGravity();
+  snapshot.covariance = kf_->GetCov();
+
+  const auto end_ns = static_cast<long long>(measures_.lidar.end_time * 1.0e9);
+  std::ostringstream name;
+  name << "step_" << debug_step_iteration_ << "_t_" << end_ns;
+  std::filesystem::path out_dir = std::filesystem::path(g_debug_export_dir) / name.str();
+
+  std::string error;
+  if(SaveStepDebugSnapshot(out_dir, snapshot, &error)){
+    debug_step_exported_ = true;
+    LOG(INFO) << GREEN << " ---> [DebugStep]: saved snapshot to "
+              << out_dir.string() << RESET;
+  }else{
+    LOG(ERROR) << RED << " ---> [DebugStep]: failed to save snapshot: "
+               << error << RESET;
+  }
 }
 
 

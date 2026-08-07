@@ -106,6 +106,11 @@ namespace LI2Sup{
   extern bool g_update_map;
   extern double g_init_px, g_init_py, g_init_pz, g_init_roll, g_init_pitch, g_init_yaw;
 
+  /// debug single-step export
+  extern int g_debug_export_iteration;
+  extern double g_debug_export_time;
+  extern std::string g_debug_export_dir;
+
 }
 
 #endif

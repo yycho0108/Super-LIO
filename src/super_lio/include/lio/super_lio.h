@@ -19,6 +19,7 @@
 #include "common/timer.h"
 #include "params.h"
 #include "ESKF.h"
+#include "step_debug_io.h"
 #include "OctVoxMap/OctVoxMap.hpp"
 #include "OctVoxMap/VoxelGridFilter.h"
 #include "ros/ROSWrapper.h"
@@ -53,6 +54,7 @@ protected:
   virtual void Output();
   void caceData();
   void ProcessCaceMap();
+  void MaybeExportDebugStep();
 
   using StateFn = void (SuperLIO::*)();
   using OctVoxMapType = OctVoxMap<BASIC::V3, BASIC::scalar>;
@@ -84,6 +86,8 @@ protected:
   std::vector<std::pair<BASIC::M6, BASIC::V6>> H_R_;
   std::vector<std::array<double, 4>> abcd_vec_;
   int pcd_index_ = -1;
+  int debug_step_iteration_ = 0;
+  bool debug_step_exported_ = false;
 
   struct RollingScan {
     BASIC::CloudPtr cloud;

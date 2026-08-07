@@ -218,6 +218,19 @@ void LoadParamFromRos(rclcpp::Node& node)
   g_init_pitch = init_pose[4];
   g_init_yaw   = init_pose[5];
 
+  // ================= debug single-step export =================
+  node.declare_parameter<int>("lio.debug.export_iteration", -1);
+  node.get_parameter("lio.debug.export_iteration", g_debug_export_iteration);
+
+  node.declare_parameter<double>("lio.debug.export_time", -1.0);
+  node.get_parameter("lio.debug.export_time", g_debug_export_time);
+
+  node.declare_parameter<std::string>("lio.debug.export_dir", "");
+  node.get_parameter("lio.debug.export_dir", g_debug_export_dir);
+  if (!g_debug_export_dir.empty() && g_debug_export_dir.front() != '/') {
+    g_debug_export_dir = g_root_dir + g_debug_export_dir;
+  }
+
   LOG(INFO) << GREEN << " ---> [Params]: Load from ROS2 parameter server."
             << RESET;
 }

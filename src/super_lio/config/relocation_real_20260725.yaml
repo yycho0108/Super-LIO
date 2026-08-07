@@ -23,13 +23,16 @@
     lio.sensor.gravity_norm: 9.81
     lio.sensor.imu_type: 1
     # Values recorded in dump6/config/config_sensors.json.
-    lio.sensor.imu_na: 0.05
+    lio.sensor.imu_na: 0.1
     #lio.sensor.imu_ng: 0.02
     #lio.sensor.imu_na: 0.25
     #lio.sensor.imu_na: 1.0
-    lio.sensor.imu_ng: 0.02
-    lio.sensor.imu_nba: 0.00001
-    lio.sensor.imu_nbg: 0.00001
+    lio.sensor.imu_ng: 0.1
+    #lio.sensor.imu_nba: 0.00001
+    #lio.sensor.imu_nbg: 0.00001
+    lio.sensor.imu_nba: 0.0001
+    lio.sensor.imu_nbg: 0.0001
+    #lio.sensor.imu_nbg: 0.1
 
     # dump6 records T_lidar_imu (IMU pose in LiDAR coordinates) as
     # [0.011, 0.02329, -0.04412] with identity rotation. The bag's TF
@@ -51,14 +54,15 @@
 
     lio.kf.kf_type: 0
     #lio.kf.kf_max_iterations: 16
-    lio.kf.kf_max_iterations: 16
-    lio.kf.kf_rematch_iterations: 9
+    lio.kf.kf_max_iterations: 8
+    lio.kf.kf_rematch_iterations: 4
     lio.kf.kf_align_gravity: false
-    lio.kf.kf_quit_eps: 0.00001
+    lio.kf.kf_quit_eps: 0.001
 
-    lio.match.plane_fit_dist_thresh: 0.20
+    lio.match.plane_fit_dist_thresh: 0.10
     lio.match.residual_gate_scale: 81.0
-    lio.match.point_plane_weight: 100000.0
+    #lio.match.point_plane_weight: 100000.0
+    lio.match.point_plane_weight: 40000.0
     lio.match.min_plane_points: 4
     lio.match.rolling_window_size: 0
 
@@ -79,5 +83,21 @@
     # This is a neutral placeholder, not a value copied from
     # /glim_ros/odom_corrected. Pass the measured seed through --init-pose.
     lio.relocation.init_pose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    # Single-step debug snapshot export. Disabled by default.
+    # Set either export_iteration or export_time, and set export_dir.
+    lio.debug.export_iteration: -1
+    # lio.debug.export_time: 1785831609.0
+    # lio.debug.export_time: 1785831613.966727662
+    # lio.debug.export_time: 1785831615.60
+    lio.debug.export_time: 1785831616.1224
+    # lio.debug.export_time: 1785831615.652487
+    # lio.debug.export_time: 1785831615.706771294
+    lio.debug.export_dir: "debug_step"
+
+    #lio.debug.export_iteration: 120       # save the 120th synchronized lidar step
+    #lio.debug.export_time: -1.0           # disabled if < 0
+    #lio.debug.export_dir: "debug_steps"   # relative to super_lio ROOT, or use absolute path
+
 
     lio.eva.timer: true
