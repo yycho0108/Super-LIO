@@ -12,6 +12,8 @@
     # Verified from metadata.yaml, DB messages, and dump6/config/config_ros.json.
     lio.ros.lidar_topic: "/livox/lidar"
     lio.ros.imu_topic: "/livox/imu"
+    #lio.ros.imu_topic: "/secondary_imu_sensor"
+    #lio.ros.imu_topic: "/fused_imu"
 
     # /livox/lidar is livox_ros_driver2/msg/CustomMsg (MID-360).
     lio.sensor.lidar_type: 1
@@ -42,6 +44,14 @@
                               1.0, 0.0, 0.0,
                               0.0, 1.0, 0.0,
                               0.0, 0.0, 1.0]
+    #lio.extrinsic.lidar_imu: [0.04, -0.021, 0.306,
+    #                          0.999, 0.0, -0.040,
+    #                          0.000, -1.000, -0.000,
+    #                          -0.040, 0.000, -0.999]
+    #lio.extrinsic.lidar_imu: [-0.029, 0.002, 0.262,
+    #                          0.999, 0.0, -0.040,
+    #                          0.000, -1.000, -0.000,
+    #                          -0.040, 0.000, -0.999]
 
     # Explicit policy-frame choice: /lio/robo/odom is the Livox IMU pose.
     # G1 balance state remains the responsibility of the G1 estimator.
@@ -70,7 +80,7 @@
     # Disabled by default to preserve existing propagation behavior.
     lio.deskew.rts_smoothing_enable: true
     lio.deskew.rts_smoothing_passes: 1
-    lio.deskew.rts_smoothing_gain: 0.5
+    lio.deskew.rts_smoothing_gain: 0.25
 
     lio.submap.submap_resolution: 0.5
     lio.submap.submap_capacity: 200000
@@ -96,7 +106,7 @@
     # lio.debug.export_time: 1785831609.0
     # lio.debug.export_time: 1785831613.966727662
     # lio.debug.export_time: 1785831615.60
-    lio.debug.export_time: 1785831616.1224
+    lio.debug.export_time: 1786108933.5086906
     # lio.debug.export_time: 1785831615.652487
     # lio.debug.export_time: 1785831615.706771294
     lio.debug.export_dir: ""
