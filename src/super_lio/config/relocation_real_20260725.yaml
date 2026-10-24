@@ -4,8 +4,24 @@
     # coordinate-preserving XYZI copy of dump6.pcd.
     lio.map.save_map: false
     lio.map.if_filter: true
+    # Optional complete PCD path. slam_launch.py supplies this at launch time;
+    # leave empty when launching this file directly and use the legacy pair below.
+    lio.map.map_path: ""
     lio.map.save_map_dir: "map_real_20260725"
-    lio.map.map_name: "dump7_xyzi.pcd"
+    #lio.map.map_name: "dump7_xyzi.pcd"
+    #lio.map.map_name: "glim_rosbag2_2026_08_13-06_11_13.pcd"
+    #lio.map.map_name: "pcd_0910_v2.pcd"
+    #lio.map.map_name: "auto_aligned_map_0921_clean.pcd"
+    #lio.map.map_name: "auto_aligned_map_1005_clean2.pcd"
+    #lio.map.map_name: "auto_aligned_map_1006_clean.pcd"
+    #lio.map.map_name: "auto_aligned_map_1007_clean.pcd"
+    #lio.map.map_name: "auto_aligned_map_1008_clean.pcd"
+    #lio.map.map_name: "auto_aligned_map_1011_clean.pcd"
+    #lio.map.map_name: "auto_aligned_map_1012_clean.pcd"
+    #lio.map.map_name: "auto_aligned_map_1012_2_clean_rot90.pcd"
+    #lio.map.map_name: "auto_aligned_map_1013_v2_clean.pcd"
+    #lio.map.map_name: "auto_aligned_map_1014_clean.pcd"
+    lio.map.map_name: "auto_aligned_map_1015_clean.pcd"
     lio.map.ds_size: 0.25
     lio.map.save_interval: -1
 
